@@ -1,0 +1,2419 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Napięcie i natężenie prądu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Układ: talia slajdów, tekst po lewej + żywy eksperyment po prawej; na telefonie jedna kolumna */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --bg:#EDF0F6; --surface:#FFFFFF; --ink:#101B33; --muted:#56607A; --line:#CAD2E1;
+  --pri:#2E5BD8; --pri-soft:rgba(46,91,216,.13); --acc:#D9951A; --glow:#FFD35A; --cu:#B8693F;
+  --el:#2E5BD8; --ion:#C9473A; --good:#24865A; --bad:#C23B2C; --glass:#8592AA; --alt:#7B5BD0;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B1020; --surface:#141B2F; --ink:#E5EAF5; --muted:#98A3BC; --line:#2A3450;
+  --pri:#6E95FF; --pri-soft:rgba(110,149,255,.18); --acc:#F2B940; --glow:#FFD96A; --cu:#D88A5E;
+  --el:#7FA2FF; --ion:#F07A6B; --good:#5CC48C; --bad:#F0705F; --glass:#7484A3; --alt:#A98BF0; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0B1020; --surface:#141B2F; --ink:#E5EAF5; --muted:#98A3BC; --line:#2A3450;
+  --pri:#6E95FF; --pri-soft:rgba(110,149,255,.18); --acc:#F2B940; --glow:#FFD96A; --cu:#D88A5E;
+  --el:#7FA2FF; --ion:#F07A6B; --good:#5CC48C; --bad:#F0705F; --glass:#7484A3; --alt:#A98BF0; color-scheme:dark }
+
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.deck{display:flex;flex-direction:column;height:100%;max-width:1240px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:15px}
+.brand span{color:var(--muted);font-weight:500}
+.topr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.counter{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chbadge{font:600 13px var(--f-mono);color:var(--good);font-variant-numeric:tabular-nums}
+.progress{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:-1px}
+.progress i{display:block;height:100%;background:var(--pri);width:0;transition:width .35s ease}
+main{flex:1;overflow-y:auto;padding-block:28px 24px}
+.slide{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:40px;align-items:start;animation:in .35s ease}
+.slide.single{grid-template-columns:minmax(0,1fr)}
+@keyframes in{from{transform:translateY(6px)}to{transform:none}}
+.text{min-width:0;max-width:62ch}
+.single .text{max-width:none}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:0 0 10px}
+h1,h2{font-family:var(--f-display);text-wrap:balance;margin:0 0 16px;line-height:1.08}
+h1{font-size:clamp(36px,6vw,70px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(28px,3.6vw,42px);font-weight:700;letter-spacing:-.01em}
+h3{font-family:var(--f-display);font-size:18px;margin:0 0 6px}
+p{margin:0 0 14px}
+.lead{font-size:19px;color:var(--muted);max-width:54ch}
+.formula{font-family:var(--f-mono);font-size:20px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:inline-block;margin:4px 0 16px}
+.formula b{color:var(--pri);font-weight:500}
+.legend{font-size:15px;color:var(--muted);margin:0 0 14px;padding-left:20px}
+.legend li{margin-bottom:3px;padding:2px 6px}
+.legend li.on,.derive li.on{background:var(--pri-soft);border-radius:6px}
+.legend b{color:var(--ink)}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--acc);padding:2px 0 2px 12px}
+.def{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:8px;padding:12px 16px;margin:0 0 16px;font-size:17px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 20px;margin:0 0 14px}
+.facts h4{font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 4px}
+.facts ul{margin:0;padding-left:18px;font-size:15px}
+.lab{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.lab svg{width:100%;height:auto;max-height:52vh;display:block}
+canvas.sim{width:100%;height:auto;display:block;max-width:100%}
+.live{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--good)}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.controls{display:grid;gap:12px}
+.ctl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
+.ctl label{font-size:14px;font-weight:600}
+.ctl output{font-family:var(--f-mono);font-size:14px;justify-self:end;font-variant-numeric:tabular-nums}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--pri)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--f-body);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--pri)}
+.chip[aria-pressed="true"]{background:var(--pri);border-color:var(--pri);color:var(--surface)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.readout > div{border-top:2px solid var(--line);padding-top:6px}
+.readout .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.readout .v{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums}
+.readout .hl{border-top-color:var(--pri)}
+.readout .hl .v{color:var(--pri)}
+.vt{font-family:var(--f-body)!important;font-size:16px!important}
+.calc{font-family:var(--f-mono);font-size:13.5px;line-height:1.7;background:var(--bg);border-radius:8px;padding:10px 12px;margin:0;overflow-x:auto;white-space:nowrap}
+.calc .lbl{display:block;font-family:var(--f-body);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.calc b{color:var(--pri);font-weight:500}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.navbtn{font:600 15px var(--f-body);padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-width:110px}
+.navbtn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.navbtn:disabled{opacity:.35;cursor:default}
+.navbtn.held{background:var(--pri);border-color:var(--pri);color:var(--surface)}
+.holdbtn{touch-action:none;user-select:none;-webkit-user-select:none}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600}
+.check input{accent-color:var(--pri);width:18px;height:18px}
+.inp{font:500 16px var(--f-mono);padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
+input.inp{width:170px}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 16px;border-top:1px solid var(--line)}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer}
+.dots button[aria-current="true"]{background:var(--pri);transform:scale(1.3)}
+.hint{font-size:12px;color:var(--muted);text-align:center}
+.toc{list-style:none;padding:0;margin:20px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 20px}
+.toc button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line);width:100%}
+.toc button:hover .t{color:var(--pri)}
+.toc button:focus-visible{outline:2px solid var(--acc)}
+.toc .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.toc li.part{grid-column:1/-1;font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-top:12px}
+.demo{display:flex;align-items:center;gap:10px;background:var(--pri-soft);border:1px solid var(--pri);border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.4;min-height:50px}
+.demo-cap{flex:1;min-width:0}
+.demo-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.demo.on .demo-dot{background:var(--pri);animation:pulse 1.2s infinite}
+.demo-btn{flex:none}
+.text > .demo{margin:0 0 16px}
+.challenges{border-top:1px solid var(--line);padding-top:12px}
+.challenges h4{font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--acc);margin:0 0 8px}
+.challenges ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.challenges li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.mk{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:1px;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--surface)}
+.challenges li.done .mk{background:var(--good);border-color:var(--good)}
+.challenges li.done .mk::after{content:"✓"}
+.challenges li.done .ct{color:var(--muted);text-decoration:line-through}
+.challenges li.done{animation:pop .5s ease}
+@keyframes pop{30%{transform:scale(1.04)}}
+.whys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:6px}
+details.why{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+details.why summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::after{content:"Dlaczego?";font-size:12px;font-weight:600;color:var(--pri);white-space:nowrap}
+details.why[open] summary::after{content:"Zwiń"}
+details.why[open]{border-color:var(--pri)}
+details.why p{margin:8px 0 0;font-size:14px;color:var(--muted)}
+details.why.err summary{color:var(--bad)}
+details.why.err summary::after{content:"Jak dobrze?"}
+details.why.err[open] summary::after{content:"Zwiń"}
+details.why.err p{color:var(--good)}
+details.why.sym summary{flex-direction:column;align-items:center;gap:6px}
+details.why.sym summary::after{content:"Co to za symbol?"}
+details.why.sym summary svg{width:120px;height:56px}
+details.why.sym p{text-align:center}
+details.why.info summary::after{content:"Więcej"}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table.cmp{width:100%;border-collapse:collapse;font-size:15px;min-width:620px}
+table.cmp th,table.cmp td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.cmp tr:last-child td,table.cmp tr:last-child th{border-bottom:0}
+table.cmp thead th{font-family:var(--f-display);font-size:16px;background:var(--bg)}
+table.cmp tbody th{font-weight:600;color:var(--muted);font-size:14px;width:24%}
+table.cmp code{font-family:var(--f-mono);color:var(--pri)}
+table.cmp tr.on th,table.cmp tr.on td{background:var(--pri-soft)}
+.quiz{display:grid;gap:18px;max-width:860px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.q > p:first-child{font-weight:600;margin-bottom:10px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:500 14px var(--f-body);padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--good);color:var(--good);font-weight:600}
+.opt.no{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.expl{font-size:14px;color:var(--muted);margin:10px 0 0}
+.expl.ok{color:var(--good);font-weight:600}
+.expl.no{color:var(--bad)}
+.score{font-family:var(--f-display);font-size:22px;font-weight:700}
+.task ol{margin:10px 0 0;padding-left:22px;display:grid;gap:6px}
+.task li{font-size:15px}
+.task .given{font-family:var(--f-mono);font-size:14px}
+.task .ans{font-weight:600;color:var(--pri)}
+.task .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.trainer{border-color:var(--pri)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .formula{font-size:17px;margin:6px 0 8px;display:block;background:var(--bg)}
+.card p{font-size:14px;color:var(--muted);margin:0}
+.card.on{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri)}
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;margin:14px 0;padding:10px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.card-s{font:500 14px var(--f-body);padding:9px 13px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}
+.card-s.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.card-s.drag{position:relative;z-index:50;cursor:grabbing;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card-s.ok{border-color:var(--good);color:var(--good);cursor:default;background:var(--surface)}
+.card-s.bad{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.bin{border:2px dashed var(--line);border-radius:12px;padding:14px;min-height:150px;background:var(--surface);cursor:pointer}
+.bin.over{border-color:var(--pri);background:var(--pri-soft)}
+.binbody{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sortbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.timeline{display:flex;justify-content:space-between;position:relative;margin:24px 0 18px;gap:4px;max-width:860px}
+.timeline::before{content:"";position:absolute;left:0;right:0;top:15px;height:2px;background:var(--line)}
+.tl{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;cursor:pointer;color:var(--ink);font:600 14px var(--f-mono);padding:0}
+.tl::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--pri);margin-top:6px;transition:transform .2s}
+.tl.seen::before{background:var(--pri-soft)}
+.tl[aria-pressed="true"]::before{background:var(--pri);transform:scale(1.35)}
+.tl[aria-pressed="true"]{color:var(--pri)}
+.tlcard{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:18px 20px;max-width:860px}
+.tlcard h3{font-size:22px}
+.tlcard .who{color:var(--muted);font-size:14px;margin:0 0 8px}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:16px 0 0}
+.gloss div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.gloss dt{font-family:var(--f-display);font-weight:700;font-size:17px}
+.gloss dd{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.kw{overflow-x:auto;padding-bottom:6px}
+.kwrow{display:flex;align-items:center;margin-bottom:4px}
+.kwnum{width:26px;flex:none;font:500 13px var(--f-mono);color:var(--muted)}
+.kwsp{width:32px;height:36px;flex:none}
+.kwcell{width:32px;height:36px;flex:none;text-align:center;font:600 17px var(--f-mono);border:1px solid var(--line);margin-left:-1px;background:var(--surface);color:var(--ink);text-transform:uppercase;padding:0;border-radius:0}
+.kwcell:focus{outline:2px solid var(--acc);position:relative;z-index:1}
+.kwcell.key{background:var(--pri-soft);border-color:var(--pri)}
+.kwcell.ok{color:var(--good)}
+.kwcell.no{color:var(--bad)}
+.kwclues{font-size:15px;padding-left:22px;display:grid;gap:4px;margin:14px 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.flow{stroke-dasharray:7 6;animation:flowa .5s linear infinite}
+@keyframes flowa{to{stroke-dashoffset:-13}}
+/* SVG */
+.wire{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.glass{fill:none;stroke:var(--glass);stroke-width:3;stroke-linejoin:round}
+.tick{stroke:var(--muted);stroke-width:1}
+.grid{stroke:var(--line);stroke-width:1}
+.svgt{fill:var(--muted);font:12px var(--f-mono)}
+.svgt-b{fill:var(--ink);font:600 13px var(--f-body)}
+.svgt-big{fill:var(--ink);font:500 15px var(--f-mono)}
+.arrow{stroke:var(--acc);stroke-width:2.5;fill:none;stroke-linecap:round}
+.arrowhead{fill:var(--acc)}
+.dash{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.eldot{fill:var(--el)}
+.qdot{fill:var(--acc)}
+.comp{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.clk{cursor:pointer}
+@media (prefers-reduced-motion: reduce){.slide{animation:none}.live::before,.demo.on .demo-dot{animation:none}.flow{animation:none}.card-s.bad,.challenges li.done{animation:none}}
+@media (max-width:860px){
+  .slide{grid-template-columns:minmax(0,1fr);gap:22px}
+  .lab svg{max-height:none}
+  .navbtn{min-width:0;padding:10px 14px}
+  .hint,.brand span{display:none}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <header class="top">
+    <div class="brand">Prąd elektryczny <span>· napięcie i natężenie</span></div>
+    <div class="topr">
+      <span class="chbadge" id="chCount" title="Wykonane wyzwania na wszystkich slajdach"></span>
+      <button class="chip" id="demoBtn" aria-pressed="true">Pokaz automatyczny: wł.</button>
+      <button class="chip" id="playBtn" aria-pressed="false">Zatrzymaj symulacje</button>
+      <div class="counter" id="counter"></div>
+    </div>
+  </header>
+  <div class="progress"><i id="bar"></i></div>
+  <main id="main">
+
+  <!-- ===================== WPROWADZENIE ===================== -->
+  <section class="slide" data-id="start" aria-label="Start">
+    <div class="text">
+      <p class="eyebrow">Fizyka · klasa 8</p>
+      <h1>Napięcie i natężenie prądu elektrycznego</h1>
+      <p class="lead">Co właściwie płynie w przewodach, gdy zapalasz światło? Dlaczego ptak może bezpiecznie siedzieć na linii wysokiego napięcia? Każdy slajd sam pokazuje doświadczenie, a potem możesz nim sterować.</p>
+      <ol class="toc" id="toc"></ol>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · elektrony w drucie miedzianym</span>
+      <canvas id="cHero" class="sim" style="aspect-ratio:420/250" role="img" aria-label="Elektrony swobodne w przewodzie miedzianym"></canvas>
+      <div class="controls">
+        <div class="ctl"><label for="hU">Napięcie na końcach przewodu</label><output id="hUo"></output><input type="range" id="hU" min="0" max="12" step="0.5" value="0"></div>
+      </div>
+      <p class="note">Bez napięcia elektrony swobodne poruszają się chaotycznie we wszystkie strony i prąd nie płynie. Gdy pojawi się napięcie, zaczynają powoli dryfować w stronę bieguna dodatniego: płynie prąd.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="prad-co" data-part="Wprowadzenie" aria-label="Co to jest prąd elektryczny" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Co to jest prąd elektryczny?</h2>
+      <p class="def"><b>Prąd elektryczny</b> to uporządkowany ruch ładunków elektrycznych.</p>
+      <p>Atom ma dodatnio naładowane jądro i ujemnie naładowane elektrony. W metalach część elektronów nie jest związana z żadnym atomem. To <b>elektrony swobodne</b>. Gdy na końcach przewodu pojawi się napięcie, płyną one w stronę bieguna dodatniego.</p>
+      <div class="facts">
+        <div><h4>W metalach płyną</h4><ul><li>elektrony swobodne</li></ul></div>
+        <div><h4>W cieczach (np. woda z solą)</h4><ul><li>jony dodatnie</li><li>jony ujemne</li></ul></div>
+        <div><h4>W gazach (błyskawica)</h4><ul><li>jony i elektrony</li></ul></div>
+      </div>
+      <p><b>Kierunek umowny</b> prądu: od bieguna dodatniego (+) do ujemnego (−) w obwodzie zewnętrznym. Ustalono go, zanim odkryto elektrony, które płyną w przeciwną stronę!</p>
+      <p class="note">Ładunek mierzymy w kulombach (C). Elektron ma ładunek zaledwie 1,6 · 10⁻¹⁹ C. Przy prądzie 1 A przez przewód przepływa w każdej sekundzie ponad 6 miliardów miliardów elektronów.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo</span>
+      <canvas id="cFlow" class="sim" style="aspect-ratio:420/260" role="img" aria-label="Ruch ładunków w metalu i w roztworze soli"></canvas>
+      <div class="chips" id="pcMode">
+        <button class="chip" data-m="metal" aria-pressed="true">W metalu</button>
+        <button class="chip" data-m="sol">W roztworze soli</button>
+      </div>
+      <label class="check"><input type="checkbox" id="pcDir"> Pokaż kierunek umowny prądu</label>
+    </div>
+  </section>
+
+  <section class="slide" data-id="przewodniki" aria-label="Przewodniki i izolatory" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Przewodniki i izolatory</h2>
+      <p class="def"><b>Przewodniki</b> mają dużo swobodnych ładunków i dobrze przewodzą prąd. <b>Izolatory</b> prawie nie mają swobodnych ładunków i nie przewodzą prądu.</p>
+      <div class="facts">
+        <div><h4>Przewodniki</h4><ul><li>metale: miedź, aluminium, srebro</li><li>grafit</li><li>roztwory soli, kwasów, zasad</li><li>ciało człowieka, mokra ziemia</li></ul></div>
+        <div><h4>Izolatory</h4><ul><li>plastik, guma</li><li>szkło, porcelana</li><li>suche drewno, papier</li><li>powietrze, woda destylowana</li></ul></div>
+      </div>
+      <p>Czysta woda destylowana prawie nie przewodzi prądu. Woda z kranu przewodzi, bo są w niej rozpuszczone sole. Woda z solą przewodzi jeszcze lepiej.</p>
+      <p class="note">Przewody elektryczne mają miedziany środek i plastikową osłonę. Miedź przewodzi prąd, a izolacja chroni nas przed porażeniem.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Tester przewodnictwa</span>
+      <svg viewBox="0 0 420 290" role="img" aria-label="Obwód z baterią, żarówką i badanym materiałem"><g id="tsG"></g></svg>
+      <div class="chips" id="tsMat"></div>
+      <div class="readout">
+        <div class="hl"><div class="k">Badany materiał to</div><div class="v vt" id="tsR"></div></div>
+        <div><div class="k">Żarówka</div><div class="v vt" id="tsB"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="obwod" aria-label="Obwód elektryczny" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Obwód elektryczny</h2>
+      <p>Żeby płynął prąd, potrzebny jest <b>zamknięty obwód elektryczny</b>. Najprostszy obwód składa się z:</p>
+      <ul class="legend" id="obList">
+        <li><b>źródła napięcia</b>, np. baterii albo zasilacza,</li>
+        <li><b>przewodów</b>, którymi płyną ładunki,</li>
+        <li><b>odbiornika</b>, np. żarówki, silnika albo grzałki,</li>
+        <li><b>wyłącznika</b>, który zamyka i otwiera obwód.</li>
+      </ul>
+      <p>Gdy obwód jest <b>zamknięty</b>, ładunki mają drogę dookoła i płynie prąd. Gdy jest <b>otwarty</b>, bo wyłącznik jest wyłączony albo przewód przerwany, prąd przestaje płynąć w całym obwodzie naraz.</p>
+      <p class="note">Wyłącznik światła w pokoju po prostu przerywa obwód. Elektrony nie „wyciekają” z otwartego przewodu: bez zamkniętej drogi po prostu stają.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · kliknij wyłącznik</span>
+      <svg viewBox="0 0 420 300" role="img" aria-label="Obwód z baterią, wyłącznikiem i żarówką"><g id="obG"></g></svg>
+      <div class="btnrow">
+        <button class="navbtn primary" id="obSw">Włącz</button>
+        <button class="navbtn" id="obCut">Przetnij przewód</button>
+        <button class="navbtn" id="obBulb">Wykręć żarówkę</button>
+      </div>
+      <label class="check"><input type="checkbox" id="obDir"> Pokaż kierunek umowny prądu</label>
+      <div class="readout"><div class="hl"><div class="k">Stan obwodu</div><div class="v vt" id="obS"></div></div></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="symbole" aria-label="Symbole elementów obwodu" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Symbole elementów obwodu</h2>
+      <p>Obwody rysujemy za pomocą umownych symboli. Taki rysunek to <b>schemat</b>. Kliknij symbol, żeby sprawdzić, co oznacza. Spróbuj najpierw zgadnąć!</p>
+      <div class="whys" id="symGrid">
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H52 M68 28 H110"/><path d="M52 10 V46" stroke="var(--ink)" stroke-width="2.5"/><path d="M68 18 V38" stroke="var(--ink)" stroke-width="6"/><text x="40" y="14" class="svgt">+</text></svg></summary><p><b>Ogniwo</b> (np. bateria AA). Dłuższa kreska to biegun dodatni.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M6 28 H30 M90 28 H114"/><path d="M30 10 V46 M60 10 V46" stroke="var(--ink)" stroke-width="2.5"/><path d="M42 18 V38 M72 18 V38" stroke="var(--ink)" stroke-width="6"/><path d="M42 28 H60" stroke="var(--ink)" stroke-width="2.5"/><path d="M72 28 H90" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="3 3"/></svg></summary><p><b>Bateria</b>, czyli kilka ogniw połączonych szeregowo.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><path d="M49 17 L71 39 M71 17 L49 39" stroke="var(--ink)" stroke-width="2"/></svg></summary><p><b>Żarówka</b> (lampka).</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H36 M84 28 H110"/><rect x="36" y="19" width="48" height="18" class="comp"/></svg></summary><p><b>Opornik</b> (rezystor), element o określonym oporze.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 32 H40 M80 32 H110"/><circle cx="40" cy="32" r="3.5" fill="var(--ink)"/><circle cx="80" cy="32" r="3.5" fill="var(--ink)"/><path d="M40 32 L76 12" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Wyłącznik otwarty</b>: prąd nie płynie.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 32 H40 M80 32 H110"/><circle cx="40" cy="32" r="3.5" fill="var(--ink)"/><circle cx="80" cy="32" r="3.5" fill="var(--ink)"/><path d="M40 32 L80 28" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Wyłącznik zamknięty</b>: prąd może płynąć.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><text x="60" y="34" text-anchor="middle" class="svgt-b" style="font-size:17px">A</text></svg></summary><p><b>Amperomierz</b>: mierzy natężenie prądu.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><text x="60" y="34" text-anchor="middle" class="svgt-b" style="font-size:17px">V</text></svg></summary><p><b>Woltomierz</b>: mierzy napięcie.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><text x="60" y="34" text-anchor="middle" class="svgt-b" style="font-size:17px">M</text></svg></summary><p><b>Silnik elektryczny</b>.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H46 M74 28 H110"/><path d="M46 14 L46 42 L72 28 Z" class="comp"/><path d="M74 14 V42" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Dioda</b>: przepuszcza prąd tylko w jedną stronę.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H36 M84 28 H110"/><rect x="36" y="20" width="48" height="16" class="comp"/><path d="M36 28 H84" stroke="var(--ink)" stroke-width="2"/></svg></summary><p><b>Bezpiecznik</b>: przerywa obwód przy zbyt dużym natężeniu.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M60 6 V30"/><path d="M40 30 H80 M47 38 H73 M54 46 H66" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Uziemienie</b>: połączenie z ziemią, które chroni przed porażeniem.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ I: NATĘŻENIE ===================== -->
+  <section class="slide" data-id="natezenie" data-part="Część I · Natężenie prądu" aria-label="Natężenie prądu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Natężenie prądu</h2>
+      <p class="def"><b>Natężenie prądu</b> mówi, jaki ładunek przepływa przez przekrój przewodu w ciągu jednej sekundy.</p>
+      <div class="formula"><b>I</b> = q / t</div>
+      <ul class="legend">
+        <li><b>I</b>: natężenie prądu, w amperach (A)</li>
+        <li><b>q</b>: ładunek, w kulombach (C)</li>
+        <li><b>t</b>: czas, w sekundach (s)</li>
+      </ul>
+      <p><b>1 A = 1 C / 1 s</b>. Prąd o natężeniu 1 A oznacza, że w każdej sekundzie przez przekrój przewodu przepływa ładunek 1 kulomba.</p>
+      <p class="note">Jednostkę nazwano na cześć francuskiego fizyka André-Marie Ampère’a. Natężenie to nie „szybkość” elektronów: one dryfują bardzo powoli, ułamki milimetra na sekundę. Liczy się, ile ładunku przepływa.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · liczymy ładunek</span>
+      <canvas id="cI" class="sim" style="aspect-ratio:420/200" role="img" aria-label="Paczki ładunku przepływające przez przekrój przewodu"></canvas>
+      <div class="controls">
+        <div class="ctl"><label for="niI">Natężenie prądu w obwodzie</label><output id="niIo"></output><input type="range" id="niI" min="0" max="2" step="0.1" value="1"></div>
+      </div>
+      <button class="navbtn" id="niReset" style="justify-self:start">Zacznij liczyć od nowa</button>
+      <div class="readout">
+        <div><div class="k">Czas t</div><div class="v" id="niT"></div></div>
+        <div><div class="k">Ładunek q</div><div class="v" id="niQ"></div></div>
+        <div class="hl"><div class="k">I = q / t</div><div class="v" id="niR"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="amperomierz" aria-label="Pomiar natężenia: amperomierz" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Pomiar natężenia: amperomierz</h2>
+      <p>Natężenie prądu mierzymy <b>amperomierzem</b>. Włączamy go do obwodu <b>szeregowo</b>, czyli w jednym ciągu z odbiornikiem, tak żeby przepływał przez niego cały prąd.</p>
+      <ul class="legend">
+        <li>Amperomierz łączymy <b>szeregowo</b> z odbiornikiem.</li>
+        <li>Zacisk „+” miernika łączymy od strony bieguna dodatniego źródła.</li>
+        <li>Zaczynamy od największego zakresu, a potem go zmniejszamy.</li>
+        <li>W obwodzie szeregowym amperomierz pokaże to samo w każdym miejscu.</li>
+      </ul>
+      <p class="note">Amperomierz ma bardzo mały opór. Włączony równolegle do odbiornika tworzy prawie zwarcie: płynie przez niego ogromny prąd i miernik może się zepsuć.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Obwód z amperomierzem"><g id="amG"></g></svg>
+      <div class="chips" id="amPos">
+        <button class="chip" data-p="s" aria-pressed="true">Amperomierz szeregowo</button>
+        <button class="chip" data-p="r">Amperomierz równolegle do żarówki</button>
+      </div>
+      <div class="btnrow">
+        <button class="navbtn primary" id="amSw">Zamknij obwód</button>
+        <button class="navbtn" id="amFix">Wymień bezpiecznik miernika</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Amperomierz pokazuje</div><div class="v" id="amI"></div></div>
+        <div><div class="k">Co się dzieje</div><div class="v vt" id="amS"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="natezenia" aria-label="Natężenia prądu wokół nas" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Jakie natężenia spotykamy?</h2>
+      <p>Natężenia prądu w urządzeniach bardzo się różnią: od milionowych części ampera w zegarku do dziesiątek tysięcy amperów w błyskawicy. Dlatego wykres ma skalę, w której każda kratka oznacza 10 razy więcej.</p>
+      <ul class="legend">
+        <li><b>1 mA</b> (miliamper) = 0,001 A</li>
+        <li><b>1 µA</b> (mikroamper) = 0,000 001 A</li>
+        <li><b>1 kA</b> (kiloamper) = 1000 A</li>
+      </ul>
+      <p class="note">Czerwona linia to ok. 30 mA. Prąd o takim natężeniu płynący przez ciało człowieka jest już groźny dla życia. Zwykła żarówka LED pobiera mniej więcej tyle samo!</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Wykres natężeń prądu w różnych urządzeniach"><g id="niG"></g></svg>
+      <p class="def" id="niInfo" style="margin:0" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="jednostki" aria-label="Jednostki i przedrostki" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Jednostki i przedrostki</h2>
+      <p>W elektryczności często spotkasz bardzo małe i bardzo duże wartości. Zamiast pisać wiele zer, używamy przedrostków:</p>
+      <ul class="legend" id="jnList">
+        <li><b>mikro (µ)</b> = 0,000 001, np. 5 µA = 0,000 005 A</li>
+        <li><b>mili (m)</b> = 0,001, np. 20 mA = 0,02 A</li>
+        <li><b>kilo (k)</b> = 1000, np. 4,7 kΩ = 4700 Ω</li>
+        <li><b>mega (M)</b> = 1 000 000, np. 2 MW = 2 000 000 W</li>
+      </ul>
+      <p>Najważniejsze jednostki: natężenie w <b>amperach (A)</b>, napięcie w <b>woltach (V)</b>, opór w <b>omach (Ω)</b>, moc w <b>watach (W)</b>.</p>
+      <p class="note">Przed obliczeniami zawsze zamień wartości na podstawowe jednostki: mA na A, kΩ na Ω, minuty na sekundy.</p>
+    </div>
+    <div class="lab">
+      <h3>Przelicznik jednostek</h3>
+      <div class="chips" id="jnQ"></div>
+      <div class="btnrow">
+        <label for="jnV" class="sr">Wartość</label><input id="jnV" class="inp" inputmode="decimal" value="20" autocomplete="off">
+        <label for="jnU" class="sr">Jednostka</label><select id="jnU" class="inp"></select>
+      </div>
+      <div class="chips" id="jnPre">
+        <button class="chip" data-q="Natężenie" data-v="20" data-u="mA">Dioda LED · 20 mA</button>
+        <button class="chip" data-q="Natężenie" data-v="2" data-u="µA">Zegarek · 2 µA</button>
+        <button class="chip" data-q="Napięcie" data-v="400" data-u="kV">Linia · 400 kV</button>
+        <button class="chip" data-q="Opór" data-v="4.7" data-u="kΩ">Opornik · 4,7 kΩ</button>
+        <button class="chip" data-q="Moc" data-v="2" data-u="kW">Czajnik · 2 kW</button>
+      </div>
+      <div class="readout" id="jnOut"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ II: NAPIĘCIE ===================== -->
+  <section class="slide" data-id="napiecie" data-part="Część II · Napięcie" aria-label="Napięcie elektryczne" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Napięcie elektryczne</h2>
+      <p>Źródło napięcia, np. bateria, działa jak pompa. Wykonuje pracę, rozdzielając ładunki: na jednym biegunie gromadzi nadmiar elektronów (−), na drugim ich niedobór (+). Dzięki temu w obwodzie może płynąć prąd.</p>
+      <p class="def"><b>Napięcie</b> mówi, jaką pracę wykonuje źródło, przenosząc w obwodzie ładunek 1 kulomba.</p>
+      <div class="formula"><b>U</b> = W / q</div>
+      <ul class="legend">
+        <li><b>U</b>: napięcie, w woltach (V)</li>
+        <li><b>W</b>: praca, w dżulach (J)</li>
+        <li><b>q</b>: ładunek, w kulombach (C)</li>
+      </ul>
+      <p class="note">Porównanie z wodą: bateria to pompa, napięcie to różnica wysokości, natężenie to ilość płynącej wody, a opór to zwężenie rury. Jednostkę wolt nazwano na cześć Alessandra Volty.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · woda i prąd</span>
+      <svg viewBox="0 0 440 300" role="img" aria-label="Obwód wodny i obwód elektryczny obok siebie"><g id="naG"></g></svg>
+      <div class="controls">
+        <div class="ctl"><label for="naU">Napięcie (wysokość)</label><output id="naUo"></output><input type="range" id="naU" min="0" max="12" step="0.5" value="6"></div>
+        <div class="ctl"><label for="naR">Opór (zwężenie rury)</label><output id="naRo"></output><input type="range" id="naR" min="2" max="20" step="1" value="6"></div>
+      </div>
+      <div class="readout">
+        <div><div class="k">Napięcie U</div><div class="v" id="naUv"></div></div>
+        <div class="hl"><div class="k">Natężenie I</div><div class="v" id="naIv"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="zrodla" aria-label="Źródła napięcia" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Źródła napięcia</h2>
+      <ul class="legend">
+        <li><b>Ogniwo</b>: np. „paluszek” AA, 1,5 V.</li>
+        <li><b>Bateria</b>: kilka ogniw połączonych szeregowo. Płaska bateria 4,5 V to 3 ogniwa.</li>
+        <li><b>Akumulator</b>: można go ładować. W telefonie ma 3,7 V, w samochodzie 12 V.</li>
+        <li><b>Zasilacz</b>: zamienia napięcie z gniazdka na niższe, np. 5 V dla telefonu.</li>
+        <li><b>Gniazdko</b>: 230 V.</li>
+        <li><b>Ogniwo słoneczne</b> i <b>prądnica</b> w elektrowni.</li>
+      </ul>
+      <p>Ogniwa połączone szeregowo, biegun „+” jednego z „−” następnego, <b>sumują napięcia</b>. Ogniwo włożone odwrotnie odejmuje swoje napięcie.</p>
+      <p class="note">Dlatego w latarce ważne jest, żeby baterie włożyć zgodnie z rysunkiem. Jedna odwrotnie włożona bateria może sprawić, że latarka prawie nie świeci.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Zbuduj baterię</span>
+      <svg viewBox="0 0 420 270" role="img" aria-label="Ogniwa połączone szeregowo i żarówka"><g id="zrG"></g></svg>
+      <div class="btnrow">
+        <button class="navbtn primary" id="zrAdd">Dodaj ogniwo</button>
+        <button class="navbtn" id="zrDel">Usuń ogniwo</button>
+        <button class="navbtn" id="zrFlip">Odwróć ostatnie ogniwo</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Napięcie baterii</div><div class="v" id="zrU"></div></div>
+        <div><div class="k">Żarówka 4,5 V</div><div class="v vt" id="zrS"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="woltomierz" aria-label="Pomiar napięcia: woltomierz" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Pomiar napięcia: woltomierz</h2>
+      <p>Napięcie mierzymy <b>woltomierzem</b>. Włączamy go <b>równolegle</b> do odbiornika: jeden przewód miernika przed odbiornikiem, drugi za nim. Woltomierz mierzy napięcie między dwoma punktami obwodu.</p>
+      <ul class="legend">
+        <li>Woltomierz łączymy <b>równolegle</b> z odbiornikiem.</li>
+        <li>Ma bardzo duży opór, więc prawie nie płynie przez niego prąd.</li>
+        <li>Zacisk „+” łączymy z punktem bliżej bieguna dodatniego.</li>
+      </ul>
+      <p>Napięcie baterii rozkłada się na odbiorniki: na większym oporze jest większe napięcie.</p>
+      <p class="note">Między dwoma punktami tego samego przewodu woltomierz pokaże 0 V. Dlatego ptak siedzący na jednym przewodzie jest bezpieczny: między jego nogami nie ma napięcia.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Kliknij dwa punkty obwodu</span>
+      <svg viewBox="0 0 420 310" role="img" aria-label="Obwód z baterią 9 V, dwoma opornikami i woltomierzem"><g id="vmG"></g></svg>
+      <div class="readout">
+        <div class="hl"><div class="k">Woltomierz pokazuje</div><div class="v" id="vmV"></div></div>
+        <div><div class="k">Co mierzymy</div><div class="v vt" id="vmInfo"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="napiecia" aria-label="Napięcia wokół nas" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Jakie napięcia spotykamy?</h2>
+      <p>Napięcia wokół nas sięgają od setnych części wolta w naszych nerwach do setek milionów woltów w piorunie. Tu też każda kratka wykresu to 10 razy więcej.</p>
+      <ul class="legend">
+        <li><b>1 mV</b> (miliwolt) = 0,001 V</li>
+        <li><b>1 kV</b> (kilowolt) = 1000 V</li>
+        <li><b>1 MV</b> (megawolt) = 1 000 000 V</li>
+      </ul>
+      <p class="note">Czerwona linia to 50 V. W suchych warunkach napięcie do ok. 50 V uważa się za bezpieczne dla człowieka, a w wilgotnych tylko do ok. 25 V. Napięcie w gniazdku, 230 V, zawsze może zabić!</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 380" role="img" aria-label="Wykres napięć w różnych urządzeniach"><g id="nnG"></g></svg>
+      <p class="def" id="nnInfo" style="margin:0" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ III: OPÓR I OBWODY ===================== -->
+  <section class="slide" data-id="ohm" data-part="Część III · Prawo Ohma i obwody" aria-label="Prawo Ohma" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Prawo Ohma</h2>
+      <p class="def">Natężenie prądu płynącego przez przewodnik jest <b>wprost proporcjonalne</b> do napięcia między jego końcami, jeśli temperatura przewodnika się nie zmienia.</p>
+      <p>Gdy zwiększymy napięcie 2 razy, natężenie też wzrośnie 2 razy. Iloraz napięcia i natężenia jest więc stały. To <b>opór elektryczny</b> (rezystancja) przewodnika.</p>
+      <div class="formula"><b>R</b> = U / I &nbsp;→&nbsp; I = U / R &nbsp;→&nbsp; U = R · I</div>
+      <ul class="legend">
+        <li><b>R</b>: opór, w omach (Ω). 1 Ω = 1 V / 1 A</li>
+      </ul>
+      <p class="note">Georg Simon Ohm opisał tę zależność w 1827 roku. Im większy opór, tym mniejsze natężenie przy tym samym napięciu.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo</span>
+      <svg viewBox="0 0 440 300" role="img" aria-label="Obwód z zasilaczem, opornikiem, amperomierzem i woltomierzem oraz wykres"><g id="ohG"></g></svg>
+      <div class="chips" id="ohR">
+        <button class="chip" data-r="10">Opornik 10 Ω</button>
+        <button class="chip" data-r="20" aria-pressed="true">Opornik 20 Ω</button>
+        <button class="chip" data-r="40">Opornik 40 Ω</button>
+      </div>
+      <div class="controls">
+        <div class="ctl"><label for="ohU">Napięcie zasilacza</label><output id="ohUo"></output><input type="range" id="ohU" min="0" max="12" step="0.5" value="6"></div>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Amperomierz</div><div class="v" id="ohI"></div></div>
+        <div><div class="k">Woltomierz</div><div class="v" id="ohV"></div></div>
+        <div><div class="k">U / I</div><div class="v" id="ohRr"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="charakterystyka" aria-label="Wykres I(U)" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Wykres zależności I od U</h2>
+      <p>Gdy zmierzymy natężenie przy różnych napięciach i zaznaczymy punkty na wykresie, dla opornika dostaniemy <b>linię prostą przechodzącą przez początek układu</b>. Taki wykres to charakterystyka prądowo-napięciowa.</p>
+      <p>Im większy opór, tym prosta jest mniej stroma: przy tym samym napięciu płynie mniejszy prąd.</p>
+      <p><b>Żarówka nie spełnia prawa Ohma.</b> Jej włókno mocno się nagrzewa, a opór metalu rośnie z temperaturą. Dlatego jej wykres się wygina.</p>
+      <p class="note">Zrób pomiary sam: wybierz element, ustaw napięcie, kliknij „Zapisz pomiar” i powtórz dla kilku napięć.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Wykres natężenia od napięcia z punktami pomiarowymi"><g id="chG"></g></svg>
+      <div class="chips" id="chEl">
+        <button class="chip" data-e="0" aria-pressed="true">Opornik 20 Ω</button>
+        <button class="chip" data-e="1">Opornik 40 Ω</button>
+        <button class="chip" data-e="2">Żarówka</button>
+      </div>
+      <div class="controls">
+        <div class="ctl"><label for="chU">Napięcie</label><output id="chUo"></output><input type="range" id="chU" min="0" max="12" step="0.5" value="4"></div>
+      </div>
+      <div class="btnrow">
+        <button class="navbtn primary" id="chSave">Zapisz pomiar</button>
+        <button class="navbtn" id="chClear">Wyczyść pomiary</button>
+      </div>
+      <p class="calc" id="chTab"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="opor" aria-label="Od czego zależy opór" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Od czego zależy opór przewodu?</h2>
+      <ul class="legend" id="opList">
+        <li><b>Długość</b>: im dłuższy przewód, tym większy opór.</li>
+        <li><b>Grubość</b> (pole przekroju): im grubszy przewód, tym mniejszy opór.</li>
+        <li><b>Materiał</b>: srebro i miedź mają mały opór, nikielina duży.</li>
+        <li><b>Temperatura</b>: w metalach opór rośnie, gdy rośnie temperatura.</li>
+      </ul>
+      <div class="formula"><b>R</b> = ρ · l / S</div>
+      <ul class="legend">
+        <li><b>ρ</b> (ro): opór właściwy materiału</li>
+        <li><b>l</b>: długość przewodu, <b>S</b>: pole przekroju</li>
+      </ul>
+      <p class="note">Dlatego kabel czajnika jest grubszy niż kabel lampki, a grzałki i oporniki robi się z cienkiego drutu z nikieliny.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 250" role="img" aria-label="Przewód o zmiennej długości i grubości w obwodzie z żarówką"><g id="opG"></g></svg>
+      <div class="chips" id="opMat"></div>
+      <div class="controls">
+        <div class="ctl"><label for="opL">Długość przewodu</label><output id="opLo"></output><input type="range" id="opL" min="0.5" max="10" step="0.5" value="2"></div>
+        <div class="ctl"><label for="opS">Pole przekroju</label><output id="opSo"></output><input type="range" id="opS" min="0.1" max="2.5" step="0.1" value="1"></div>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Opór przewodu</div><div class="v" id="opR"></div></div>
+        <div><div class="k">Natężenie w obwodzie</div><div class="v" id="opI"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="szeregowe" aria-label="Połączenie szeregowe" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Połączenie szeregowe</h2>
+      <p>Odbiorniki są połączone jeden za drugim i tworzą <b>jedną drogę</b> dla prądu.</p>
+      <ul class="legend" id="szList">
+        <li><b>Natężenie</b> jest wszędzie takie samo: I = I₁ = I₂</li>
+        <li><b>Napięcie</b> źródła rozkłada się na odbiorniki: U = U₁ + U₂</li>
+        <li><b>Opór zastępczy</b> to suma oporów: R = R₁ + R₂</li>
+        <li>Gdy jeden odbiornik się przepali albo go wykręcimy, <b>gasną wszystkie</b>.</li>
+      </ul>
+      <p class="note">Tak były połączone dawne lampki choinkowe: gdy przepaliła się jedna żarówka, gasł cały łańcuch i trzeba było szukać, która to.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Kliknij żarówkę, żeby ją wykręcić</span>
+      <svg viewBox="0 0 420 300" role="img" aria-label="Żarówki połączone szeregowo"><g id="szG"></g></svg>
+      <div class="chips" id="szN">
+        <button class="chip" data-n="1">1 żarówka</button>
+        <button class="chip" data-n="2" aria-pressed="true">2 żarówki</button>
+        <button class="chip" data-n="3">3 żarówki</button>
+        <button class="chip" data-n="4">4 żarówki</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Natężenie</div><div class="v" id="szI"></div></div>
+        <div><div class="k">Napięcie na 1 żarówce</div><div class="v" id="szU"></div></div>
+        <div><div class="k">Opór zastępczy</div><div class="v" id="szR"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="rownolegle" aria-label="Połączenie równoległe" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Połączenie równoległe</h2>
+      <p>Każdy odbiornik ma <b>własną drogę</b> do źródła. Prąd rozgałęzia się w węzłach.</p>
+      <ul class="legend" id="rwList">
+        <li><b>Napięcie</b> na każdym odbiorniku jest takie samo jak napięcie źródła: U = U₁ = U₂</li>
+        <li><b>Natężenie</b> się rozgałęzia: I = I₁ + I₂</li>
+        <li><b>Opór zastępczy</b> jest mniejszy od najmniejszego z oporów.</li>
+        <li>Gdy jeden odbiornik się wyłączy, <b>pozostałe działają dalej</b>.</li>
+      </ul>
+      <p class="note">Tak połączone są urządzenia w mieszkaniu. Każde dostaje 230 V i można je włączać niezależnie. Ale każde kolejne zwiększa natężenie w przewodach, dlatego potrzebne są bezpieczniki.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Kliknij żarówkę, żeby ją wykręcić</span>
+      <svg viewBox="0 0 420 300" role="img" aria-label="Żarówki połączone równolegle"><g id="rwG"></g></svg>
+      <div class="chips" id="rwN">
+        <button class="chip" data-n="1">1 żarówka</button>
+        <button class="chip" data-n="2" aria-pressed="true">2 żarówki</button>
+        <button class="chip" data-n="3">3 żarówki</button>
+        <button class="chip" data-n="4">4 żarówki</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Natężenie ze źródła</div><div class="v" id="rwI"></div></div>
+        <div><div class="k">Przez 1 żarówkę</div><div class="v" id="rwIk"></div></div>
+        <div><div class="k">Opór zastępczy</div><div class="v" id="rwR"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="polaczenia" aria-label="Szeregowo czy równolegle" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Szeregowo czy równolegle?</h2>
+      <div class="tablewrap">
+        <table class="cmp">
+          <thead><tr><th scope="col">Cecha</th><th scope="col">Połączenie szeregowe</th><th scope="col">Połączenie równoległe</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Droga prądu</th><td>jedna, wspólna dla wszystkich odbiorników</td><td>osobna dla każdego odbiornika</td></tr>
+            <tr><th scope="row">Natężenie</th><td>wszędzie takie samo: <code>I = I₁ = I₂</code></td><td>sumuje się: <code>I = I₁ + I₂</code></td></tr>
+            <tr><th scope="row">Napięcie</th><td>sumuje się: <code>U = U₁ + U₂</code></td><td>wszędzie takie samo: <code>U = U₁ = U₂</code></td></tr>
+            <tr><th scope="row">Opór zastępczy</th><td>suma oporów, większy od każdego: <code>R = R₁ + R₂</code></td><td>mniejszy od najmniejszego z oporów</td></tr>
+            <tr><th scope="row">Gdy jeden odbiornik przestanie działać</th><td>gasną wszystkie</td><td>pozostałe działają dalej</td></tr>
+            <tr><th scope="row">Przykłady</th><td>dawne lampki choinkowe, ogniwa w latarce</td><td>instalacja w mieszkaniu, reflektory samochodu</td></tr>
+            <tr><th scope="row">Jak włączamy miernik</th><td>amperomierz</td><td>woltomierz</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ IV: ENERGIA I BEZPIECZEŃSTWO ===================== -->
+  <section class="slide" data-id="moc" data-part="Część IV · Energia i bezpieczeństwo" aria-label="Praca i moc prądu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Praca i moc prądu</h2>
+      <p>Prąd płynący przez odbiornik wykonuje pracę: grzeje wodę, świeci, obraca silnik.</p>
+      <div class="formula"><b>W</b> = U · I · t &nbsp;&nbsp; <b>P</b> = U · I</div>
+      <ul class="legend">
+        <li><b>W</b>: praca (energia), w dżulach (J)</li>
+        <li><b>P</b>: moc, w watach (W). 1 W = 1 V · 1 A</li>
+        <li><b>t</b>: czas</li>
+      </ul>
+      <p>Za prąd płacimy według <b>kilowatogodzin (kWh)</b>. 1 kWh to energia, którą zużywa urządzenie o mocy 1000 W przez 1 godzinę. <b>1 kWh = 3 600 000 J</b>.</p>
+      <p class="note">W obliczeniach przyjmujemy cenę 1 zł za 1 kWh. Prawdziwa cena zależy od taryfy i dostawcy.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Licznik energii na żywo</span>
+      <svg viewBox="0 0 420 150" role="img" aria-label="Licznik energii elektrycznej"><g id="moG"></g></svg>
+      <div class="chips" id="moDev"></div>
+      <div class="controls">
+        <div class="ctl"><label for="moT">Czas pracy dziennie</label><output id="moTo"></output><input type="range" id="moT" min="0.1" max="24" step="0.1" value="1"></div>
+        <div class="ctl"><label for="moD">Liczba dni</label><output id="moDo"></output><input type="range" id="moD" min="1" max="365" step="1" value="30"></div>
+      </div>
+      <div class="readout">
+        <div><div class="k">Natężenie przy 230 V</div><div class="v" id="moI"></div></div>
+        <div class="hl"><div class="k">Energia</div><div class="v" id="moE"></div></div>
+        <div><div class="k">Koszt</div><div class="v" id="moC"></div></div>
+      </div>
+      <p class="calc" id="moCalc"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="skutki" aria-label="Skutki przepływu prądu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Skutki przepływu prądu</h2>
+      <ul class="legend" id="skList">
+        <li><b>Cieplny</b>: przewodnik się nagrzewa. Czajnik, żelazko, piekarnik, suszarka.</li>
+        <li><b>Świetlny</b>: przewodnik albo gaz świeci. Żarówka, dioda LED, świetlówka, błyskawica.</li>
+        <li><b>Magnetyczny</b>: wokół przewodu z prądem powstaje pole magnetyczne. Elektromagnes, silnik, głośnik, dzwonek.</li>
+        <li><b>Chemiczny</b>: prąd rozkłada substancje w roztworach. Elektroliza, ładowanie akumulatora, pokrywanie metali chromem.</li>
+      </ul>
+      <p class="note">Skutek magnetyczny odkrył w 1820 roku Hans Christian Ørsted: igła kompasu położonego przy przewodzie odchylała się, gdy płynął prąd.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo</span>
+      <svg viewBox="0 0 400 260" role="img" aria-label="Skutek przepływu prądu"><g id="skG"></g></svg>
+      <div class="chips" id="skE">
+        <button class="chip" data-e="0" aria-pressed="true">Cieplny</button>
+        <button class="chip" data-e="1">Świetlny</button>
+        <button class="chip" data-e="2">Magnetyczny</button>
+        <button class="chip" data-e="3">Chemiczny</button>
+      </div>
+      <button class="navbtn primary" id="skOn" style="justify-self:start">Włącz prąd</button>
+      <p class="def" id="skInfo" style="margin:0" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="bezpiecznik" aria-label="Bezpiecznik i zwarcie" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Bezpiecznik, przeciążenie i zwarcie</h2>
+      <p>Przewody w instalacji wytrzymują tylko określone natężenie. Zbyt duży prąd mocno je nagrzewa i może wywołać pożar.</p>
+      <ul class="legend">
+        <li><b>Przeciążenie</b>: włączamy naraz zbyt wiele urządzeń o dużej mocy. Natężenia z gałęzi równoległych się sumują.</li>
+        <li><b>Zwarcie</b>: przewody łączą się bezpośrednio, z pominięciem odbiornika. Opór jest wtedy prawie zerowy, a natężenie ogromne.</li>
+      </ul>
+      <p><b>Bezpiecznik</b>, np. 16 A, przerywa obwód, gdy natężenie jest za duże. Dawniej używano topikowych „korków”, w których przepalał się drucik. Dziś stosuje się bezpieczniki automatyczne, które po usunięciu przyczyny włącza się ponownie.</p>
+      <p class="note">Zanim włączysz bezpiecznik ponownie, wyłącz część urządzeń albo usuń przyczynę zwarcia. Nigdy nie zastępuj bezpiecznika drutem!</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · włączaj urządzenia</span>
+      <svg viewBox="0 0 420 260" role="img" aria-label="Skrzynka z bezpiecznikiem i listwa z urządzeniami"><g id="bzG"></g></svg>
+      <div class="chips" id="bzDev"></div>
+      <div class="btnrow">
+        <button class="navbtn" id="bzShort">Zwarcie!</button>
+        <button class="navbtn primary" id="bzReset">Włącz bezpiecznik ponownie</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Natężenie w przewodach</div><div class="v" id="bzI"></div></div>
+        <div><div class="k">Stan</div><div class="v vt" id="bzS"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="bezpieczenstwo" aria-label="Prąd a ludzkie ciało" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Prąd a ludzkie ciało</h2>
+      <p>Ciało człowieka przewodzi prąd, bo zawiera wodę z rozpuszczonymi solami. Groźne jest <b>natężenie</b> prądu płynącego przez ciało. Zależy ono od napięcia i od oporu ciała: mokra skóra ma znacznie mniejszy opór niż sucha.</p>
+      <h3>Zasady bezpieczeństwa</h3>
+      <ul class="legend" id="bsList">
+        <li>Nie dotykaj uszkodzonych przewodów i urządzeń.</li>
+        <li>Nigdy nie wkładaj niczego do gniazdka.</li>
+        <li>Nie używaj urządzeń elektrycznych mokrymi rękami ani przy wannie.</li>
+        <li>Wyciągaj wtyczkę, trzymając za wtyczkę, a nie za kabel.</li>
+        <li>Nie zbliżaj się do zerwanych linii i nie wchodź na słupy.</li>
+        <li>Gdy ktoś jest porażony, najpierw wyłącz prąd, dopiero potem go dotknij.</li>
+      </ul>
+      <p class="note">Wyłącznik różnicowoprądowy w mieszkaniu odcina prąd, gdy wykryje „ucieczkę” prądu ok. 30 mA, np. przez ciało człowieka.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Skala skutków prądu płynącego przez ciało"><g id="bsG"></g></svg>
+      <div class="chips" id="bsU">
+        <button class="chip" data-u="4.5" aria-pressed="true">Bateria 4,5 V</button>
+        <button class="chip" data-u="12">Akumulator 12 V</button>
+        <button class="chip" data-u="230">Gniazdko 230 V</button>
+      </div>
+      <div class="chips" id="bsSkin">
+        <button class="chip" data-r="100000" aria-pressed="true">Sucha skóra</button>
+        <button class="chip" data-r="1000">Mokra skóra</button>
+      </div>
+      <div class="readout">
+        <div><div class="k">Opór ciała</div><div class="v" id="bsR"></div></div>
+        <div class="hl"><div class="k">Natężenie przez ciało</div><div class="v" id="bsI"></div></div>
+        <div><div class="k">Skutek</div><div class="v vt" id="bsE"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ V: WIEDZA W PRAKTYCE ===================== -->
+  <section class="slide single" data-id="historia" data-part="Część V · Ciekawostki i porównania" aria-label="Odkrywcy elektryczności" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Odkrywcy elektryczności</h2>
+      <p>Kliknij datę na osi czasu.</p>
+      <div class="timeline" id="tlBar"></div>
+      <div class="tlcard" id="tlCard" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="przyroda" aria-label="Prąd w przyrodzie" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Prąd i napięcie w przyrodzie</h2>
+      <p>Elektryczność nie jest wynalazkiem człowieka. Kliknij, żeby dowiedzieć się więcej.</p>
+      <div class="whys">
+        <details class="why info"><summary>Piorun</summary><p>To gigantyczna iskra między chmurą a ziemią. Napięcie sięga setek milionów woltów, a natężenie ok. 30 000 A. Trwa jednak tylko ułamek sekundy.</p></details>
+        <details class="why info"><summary>Węgorz elektryczny</summary><p>Ta ryba z Ameryki Południowej ma narządy elektryczne zbudowane z tysięcy komórek połączonych jak ogniwa w baterii. Potrafi wytworzyć napięcie nawet ok. 800 V i ogłuszyć ofiarę.</p></details>
+        <details class="why info"><summary>Nasz układ nerwowy</summary><p>Komórki nerwowe przesyłają sygnały elektryczne. Napięcie w błonie komórki nerwowej to ok. 0,07 V, a impulsy biegną nerwami z prędkością nawet ponad 100 m/s.</p></details>
+        <details class="why info"><summary>Serce i EKG</summary><p>Każde uderzenie serca wywołuje impuls elektryczny. Lekarz mierzy go elektrokardiografem (EKG), który rejestruje napięcia rzędu tysięcznych części wolta.</p></details>
+        <details class="why info"><summary>Ptak na linii wysokiego napięcia</summary><p>Ptak siedzi na jednym przewodzie, więc obie jego nogi są w tym samym „położeniu elektrycznym”. Między nogami nie ma napięcia i przez ptaka nie płynie prąd. Groźne byłoby dotknięcie dwóch przewodów naraz.</p></details>
+        <details class="why info"><summary>Rekiny</summary><p>Rekiny mają w pysku specjalne narządy, które wyczuwają słabe pola elektryczne wytwarzane przez mięśnie ryb. Znajdują w ten sposób ofiarę ukrytą w piasku.</p></details>
+        <details class="why info"><summary>Drętwa</summary><p>Płaszczka drętwa ma narządy elektryczne po bokach głowy i potrafi wytworzyć napięcie ok. 200 V. Starożytni Grecy i Rzymianie używali jej do łagodzenia bólu.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="porownanie" aria-label="Napięcie a natężenie" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Napięcie a natężenie</h2>
+      <div class="tablewrap">
+        <table class="cmp">
+          <thead><tr><th scope="col">Cecha</th><th scope="col">Napięcie (U)</th><th scope="col">Natężenie (I)</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Co opisuje</th><td>pracę źródła przy przenoszeniu ładunku 1 C</td><td>ładunek przepływający w ciągu 1 s</td></tr>
+            <tr><th scope="row">Wzór</th><td><code>U = W / q</code></td><td><code>I = q / t</code></td></tr>
+            <tr><th scope="row">Jednostka</th><td>wolt (V)</td><td>amper (A)</td></tr>
+            <tr><th scope="row">Przyrząd</th><td>woltomierz</td><td>amperomierz</td></tr>
+            <tr><th scope="row">Jak włączamy miernik</th><td>równolegle do odbiornika</td><td>szeregowo z odbiornikiem</td></tr>
+            <tr><th scope="row">Porównanie z wodą</th><td>różnica wysokości</td><td>ilość płynącej wody</td></tr>
+            <tr><th scope="row">Połączenie szeregowe</th><td>sumuje się na odbiornikach</td><td>wszędzie takie samo</td></tr>
+            <tr><th scope="row">Połączenie równoległe</th><td>na każdym odbiorniku takie samo</td><td>sumuje się w węzłach</td></tr>
+            <tr><th scope="row">Związek</th><td colspan="2">prawo Ohma: <code>I = U / R</code>, moc: <code>P = U · I</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="segreguj" aria-label="Gra: napięcie czy natężenie?" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Gra: napięcie czy natężenie?</h2>
+      <p>Przeciągnij każdą kartę do właściwego pojemnika. Możesz też kliknąć kartę, a potem pojemnik.</p>
+      <div class="sortbar"><span class="score" id="sgScore"></span><button class="navbtn" id="sgReset">Zagraj od nowa</button></div>
+      <div class="pool" id="sgPool"></div>
+      <div class="bins">
+        <div class="bin" data-bin="u" tabindex="0" role="button" aria-label="Pojemnik: napięcie"><h3>Napięcie (U)</h3><div class="binbody"></div></div>
+        <div class="bin" data-bin="i" tabindex="0" role="button" aria-label="Pojemnik: natężenie"><h3>Natężenie (I)</h3><div class="binbody"></div></div>
+      </div>
+      <p class="expl" id="sgMsg" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ VI: ĆWICZENIA ===================== -->
+  <section class="slide single" data-id="domowe" data-part="Część VI · Ćwiczenia" aria-label="Doświadczenia do zrobienia w domu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Doświadczenia do zrobienia w domu</h2>
+      <p>Używaj tylko baterii! <b>Nigdy nie eksperymentuj z gniazdkiem ani z urządzeniami zasilanymi z sieci.</b> Kliknij, żeby zobaczyć instrukcję.</p>
+      <div class="whys">
+        <details class="why info"><summary>Ogniwo z cytryny</summary><p><b>Potrzebujesz:</b> kilku cytryn, miedzianych monet lub drutu, ocynkowanych gwoździ, przewodów z krokodylkami i diody LED.</p><p><b>Zrób:</b> wbij w każdą cytrynę gwóźdź i monetę. Połącz cytryny szeregowo: moneta jednej z gwoździem następnej. Podłącz diodę.</p><p><b>Dlaczego:</b> dwa różne metale w kwaśnym soku tworzą ogniwo o napięciu ok. 0,9 V. Kilka ogniw szeregowo sumuje napięcia i dioda zaczyna świecić.</p></details>
+        <details class="why info"><summary>Tester przewodnictwa</summary><p><b>Potrzebujesz:</b> płaskiej baterii 4,5 V, małej żarówki z oprawką i trzech przewodów.</p><p><b>Zrób:</b> zbuduj obwód z przerwą. Dotykaj końcami przewodów w przerwie różnych przedmiotów: łyżki, ołówka, gumki, plastiku.</p><p><b>Dlaczego:</b> żarówka świeci tylko wtedy, gdy przedmiot jest przewodnikiem i zamyka obwód.</p></details>
+        <details class="why info"><summary>Elektromagnes z gwoździa</summary><p><b>Potrzebujesz:</b> dużego stalowego gwoździa, ok. 1 m cienkiego izolowanego drutu, baterii 4,5 V i spinaczy.</p><p><b>Zrób:</b> nawiń drut na gwóźdź, końce podłącz do baterii tylko na kilka sekund (drut się nagrzewa!). Zbliż gwóźdź do spinaczy.</p><p><b>Dlaczego:</b> prąd płynący w zwojach wytwarza pole magnetyczne. Gwóźdź staje się magnesem, dopóki płynie prąd.</p></details>
+        <details class="why info"><summary>Doświadczenie Ørsteda</summary><p><b>Potrzebujesz:</b> kompasu, kawałka drutu i baterii.</p><p><b>Zrób:</b> połóż drut nad igłą kompasu, równolegle do niej. Na chwilę podłącz końce drutu do baterii.</p><p><b>Dlaczego:</b> wokół przewodu z prądem powstaje pole magnetyczne, które odchyla igłę.</p></details>
+        <details class="why info"><summary>Szeregowo i równolegle</summary><p><b>Potrzebujesz:</b> baterii 4,5 V, dwóch takich samych żarówek z oprawkami i przewodów.</p><p><b>Zrób:</b> połącz żarówki najpierw szeregowo, potem równolegle. Porównaj, jak jasno świecą. Wykręć jedną.</p><p><b>Dlaczego:</b> w połączeniu szeregowym na każdej żarówce jest połowa napięcia i obie świecą słabo. W równoległym każda ma pełne napięcie.</p></details>
+        <details class="why info"><summary>Elektryzowanie balonika</summary><p><b>Potrzebujesz:</b> balonika i swetra lub suchych włosów.</p><p><b>Zrób:</b> potrzyj balonik o sweter i zbliż go do drobnych kawałków papieru albo do ściany.</p><p><b>Dlaczego:</b> przy pocieraniu elektrony przechodzą z jednego ciała na drugie. Balonik ma nadmiar ładunku ujemnego i przyciąga papier.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="bledy" aria-label="Najczęstsze błędy" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Uważaj na te błędy</h2>
+      <p>Te pomyłki zdarzają się najczęściej. Kliknij błąd, aby zobaczyć, jak zrobić to dobrze.</p>
+      <div class="whys">
+        <details class="why err"><summary>Błąd: amperomierz włączam równolegle</summary><p>Dobrze: amperomierz zawsze szeregowo, a woltomierz równolegle do odbiornika.</p></details>
+        <details class="why err"><summary>Błąd: 250 mA = 25 A</summary><p>Dobrze: mili oznacza tysięczną część, więc 250 mA = 250 : 1000 = 0,25 A.</p></details>
+        <details class="why err"><summary>Błąd: prąd „zużywa się” w żarówce</summary><p>Dobrze: natężenie przed żarówką i za nią jest takie samo. Zużywa się energia, a nie ładunek.</p></details>
+        <details class="why err"><summary>Błąd: elektrony płyną od plusa do minusa</summary><p>Dobrze: od plusa do minusa płynie prąd w kierunku umownym. Elektrony płyną odwrotnie: od minusa do plusa.</p></details>
+        <details class="why err"><summary>Błąd: w połączeniu szeregowym napięcie jest wszędzie takie samo</summary><p>Dobrze: w szeregowym takie samo jest natężenie, a napięcia się sumują. W równoległym jest odwrotnie.</p></details>
+        <details class="why err"><summary>Błąd: kWh to jednostka mocy</summary><p>Dobrze: kilowatogodzina to jednostka energii (pracy). Moc mierzymy w watach. 1 kWh = 1000 W · 3600 s = 3 600 000 J.</p></details>
+        <details class="why err"><summary>Błąd: czas w minutach wstawiam do wzoru I = q / t</summary><p>Dobrze: czas zamieniamy na sekundy, np. 2 min = 120 s. Wtedy wynik wyjdzie w amperach.</p></details>
+        <details class="why err"><summary>Błąd: niskie napięcie z baterii zawsze jest bezpieczne, więc gniazdko też</summary><p>Dobrze: bateria 4,5 V jest bezpieczna, ale 230 V z gniazdka może zabić. Groźne jest natężenie, a przy wysokim napięciu przez ciało płynie duży prąd.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="zadania" aria-label="Zadania z rozwiązaniami" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Zadania krok po kroku</h2>
+      <p>Na początek trening z losowymi liczbami: wpisz wynik i sprawdź. Niżej są zadania z rozwiązaniem krok po kroku.</p>
+      <div class="quiz">
+        <div class="q trainer">
+          <p class="eyebrow" style="margin-bottom:6px">Trening · losowe zadania</p>
+          <p id="trQ"></p>
+          <div class="btnrow">
+            <label for="trIn" class="sr">Twoja odpowiedź</label>
+            <input id="trIn" class="inp" inputmode="decimal" autocomplete="off" placeholder="wynik">
+            <span id="trU" class="counter"></span>
+            <button class="navbtn primary" id="trCheck">Sprawdź</button>
+            <button class="navbtn" id="trHint">Podpowiedź</button>
+            <button class="navbtn" id="trNew">Nowe zadanie</button>
+          </div>
+          <p class="expl" id="trMsg" aria-live="polite"></p>
+          <p class="score" style="font-size:16px;margin:8px 0 0" id="trStreak"></p>
+        </div>
+      </div>
+      <div class="quiz" id="tasks" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="quiz" aria-label="Sprawdź się" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Sprawdź się: quiz</h2>
+      <p class="score" id="qScore"></p>
+      <div class="quiz" id="quiz"></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="krzyzowka" aria-label="Krzyżówka z hasłem" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Krzyżówka z hasłem</h2>
+      <p>Wpisz odpowiedzi. Litery w niebieskiej kolumnie utworzą hasło: nazwę jednostki.</p>
+      <div class="kw" id="kwGrid"></div>
+      <ol class="kwclues" id="kwClues"></ol>
+      <div class="btnrow">
+        <button class="navbtn primary" id="kwCheck">Sprawdź</button>
+        <button class="navbtn" id="kwShow">Pokaż rozwiązanie</button>
+        <button class="navbtn" id="kwClear">Wyczyść</button>
+      </div>
+      <p class="expl" id="kwMsg" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== NA KONIEC ===================== -->
+  <section class="slide single" data-id="podsumowanie" data-part="Na koniec" aria-label="Podsumowanie" hidden>
+    <div class="text">
+      <p class="eyebrow">Na koniec</p>
+      <h2>Najważniejsze wzory i fakty</h2>
+      <div class="cards">
+        <div class="card"><h3>Prąd elektryczny</h3><span class="formula">uporządkowany ruch ładunków</span><p>W metalach płyną elektrony, od − do +. Kierunek umowny: od + do −.</p></div>
+        <div class="card"><h3>Natężenie</h3><span class="formula">I = q / t</span><p>W amperach (A). Mierzy je amperomierz, włączany szeregowo.</p></div>
+        <div class="card"><h3>Napięcie</h3><span class="formula">U = W / q</span><p>W woltach (V). Mierzy je woltomierz, włączany równolegle.</p></div>
+        <div class="card"><h3>Prawo Ohma</h3><span class="formula">R = U / I</span><p>Opór w omach (Ω). Natężenie jest proporcjonalne do napięcia.</p></div>
+        <div class="card"><h3>Opór przewodu</h3><span class="formula">R = ρ · l / S</span><p>Rośnie z długością, maleje z grubością, zależy od materiału i temperatury.</p></div>
+        <div class="card"><h3>Szeregowo</h3><span class="formula">I wszędzie równe, U sumuje się</span><p>R = R₁ + R₂. Jedna przerwa gasi wszystko.</p></div>
+        <div class="card"><h3>Równolegle</h3><span class="formula">U wszędzie równe, I sumuje się</span><p>Opór zastępczy mniejszy od najmniejszego. Odbiorniki działają niezależnie.</p></div>
+        <div class="card"><h3>Moc i praca</h3><span class="formula">P = U · I, W = P · t</span><p>Moc w watach (W). 1 kWh = 3 600 000 J.</p></div>
+        <div class="card"><h3>Bezpieczeństwo</h3><span class="formula">30 mA · 50 V</span><p>Prąd ok. 30 mA przez ciało jest groźny. Bezpieczne napięcie: do ok. 50 V (sucho).</p></div>
+        <div class="card"><h3>Przedrostki</h3><span class="formula">µ · m · k · M</span><p>mikro = 0,000 001, mili = 0,001, kilo = 1000, mega = 1 000 000.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="slowniczek" aria-label="Słowniczek pojęć" hidden>
+    <div class="text">
+      <p class="eyebrow">Na koniec</p>
+      <h2>Słowniczek pojęć</h2>
+      <div class="btnrow"><label for="glQ" class="sr">Szukaj pojęcia</label><input id="glQ" class="inp" style="width:260px" placeholder="Szukaj pojęcia…" autocomplete="off"></div>
+      <dl class="gloss" id="gloss"></dl>
+      <p class="expl" id="glNone" hidden>Nie znaleziono takiego pojęcia. Spróbuj innego słowa.</p>
+    </div>
+  </section>
+
+  </main>
+  <nav class="nav" aria-label="Nawigacja slajdów">
+    <button class="navbtn" id="prev">← Wstecz</button>
+    <div>
+      <div class="dots" id="dots"></div>
+      <div class="hint">Strzałki ← → przełączają slajdy</div>
+    </div>
+    <button class="navbtn primary" id="next">Dalej →</button>
+  </nav>
+</div>
+<script>
+(function(){
+/* ================== narzędzia ================== */
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const nf = (x, d=0) => x.toLocaleString('pl-PL', {minimumFractionDigits:d, maximumFractionDigits:d});
+const nv = (x, d=4) => x.toLocaleString('pl-PL', {maximumFractionDigits:d});
+const si = (x, unit) => {
+  const a = Math.abs(x); if (a < 1e-12) return '0 ' + unit;
+  for (const [f, p] of [[1e6, 'M'], [1e3, 'k'], [1, ''], [1e-3, 'm'], [1e-6, 'µ']]) if (a >= f*0.99995) { const v = x/f, av = Math.abs(v); return nv(v, av >= 100 ? 0 : av >= 10 ? 1 : 2) + ' ' + p + unit; }
+  return nv(x/1e-6, 3) + ' µ' + unit;
+};
+const svgPoint = (svg, evt) => { const pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+function arrow(parent, x1, y1, x2, y2, color){
+  el('line', {x1, y1, x2, y2, class:'arrow', style:color ? `stroke:${color}` : ''}, parent);
+  const a = Math.atan2(y2 - y1, x2 - x1), s = 7;
+  el('path', {d:`M${x2} ${y2} L${x2 - s*Math.cos(a - 0.5)} ${y2 - s*Math.sin(a - 0.5)} L${x2 - s*Math.cos(a + 0.5)} ${y2 - s*Math.sin(a + 0.5)}Z`, class:'arrowhead', style:color ? `fill:${color}` : ''}, parent);
+}
+function chipGroup(container, onPick){
+  container.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b || !container.contains(b)) return;
+    container.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === b ? 'true' : 'false'));
+    onPick(b, e);
+  });
+}
+const sims = {};
+const S = {};
+let onSlideChange = null;
+let playing = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const CC = {};
+function refreshColors(){ const cs = getComputedStyle(document.documentElement); ['--pri','--pri-soft','--ink','--muted','--line','--glass','--acc','--surface','--bg','--cu','--el','--ion','--glow','--good','--bad','--alt'].forEach(n => CC[n] = cs.getPropertyValue(n).trim()); }
+refreshColors();
+function fitCanvas(c, W, H){
+  const w0 = c.clientWidth; if (!w0) return null;
+  const dpr = window.devicePixelRatio || 1, w = Math.round(w0*dpr);
+  if (c.width !== w) { c.width = w; c.height = Math.round(w*H/W); }
+  const ctx = c.getContext('2d'); ctx.setTransform(c.width/W, 0, 0, c.width/W, 0, 0); return ctx;
+}
+function holdButton(b, set){
+  const on = e => { e.preventDefault(); set(true); b.classList.add('held'); }, off = () => { set(false); b.classList.remove('held'); };
+  b.addEventListener('pointerdown', on);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, off));
+  b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) on(e); });
+  b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') off(); });
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
+/* ścieżka do przesuwania elektronów */
+function Poly(pts){
+  const seg = []; let L = 0;
+  for (let i = 0; i < pts.length - 1; i++) { const [x1, y1] = pts[i], [x2, y2] = pts[i + 1], l = Math.hypot(x2 - x1, y2 - y1); seg.push([x1, y1, x2, y2, L, l]); L += l; }
+  return {L, at(t){ let d = ((t % 1) + 1) % 1*L; for (const s of seg) if (d <= s[4] + s[5]) { const f = s[5] ? (d - s[4])/s[5] : 0; return [s[0] + (s[2] - s[0])*f, s[1] + (s[3] - s[1])*f]; } const s = seg[seg.length - 1]; return [s[2], s[3]]; }};
+}
+const wire = (g, pts, extra) => el('path', Object.assign({d:'M' + pts.map(p => p.join(' ')).join(' L'), class:'wire'}, extra || {}), g);
+function cellV(g, x, y, lab){
+  el('rect', {x:x - 18, y:y - 11, width:36, height:22, fill:'var(--surface)'}, g);
+  el('line', {x1:x - 16, x2:x + 16, y1:y - 5, y2:y - 5, stroke:'var(--ink)', 'stroke-width':2.5}, g);
+  el('line', {x1:x - 8, x2:x + 8, y1:y + 5, y2:y + 5, stroke:'var(--ink)', 'stroke-width':6}, g);
+  el('text', {x:x - 22, y:y - 6, 'text-anchor':'end', class:'svgt-b'}, g).textContent = '+';
+  if (lab) el('text', {x:x + 22, y:y + 5, class:'svgt-b'}, g).textContent = lab;
+}
+function cellH(g, x, y, lab){
+  el('rect', {x:x - 11, y:y - 18, width:22, height:36, fill:'var(--surface)'}, g);
+  el('line', {x1:x - 5, x2:x - 5, y1:y - 16, y2:y + 16, stroke:'var(--ink)', 'stroke-width':2.5}, g);
+  el('line', {x1:x + 5, x2:x + 5, y1:y - 8, y2:y + 8, stroke:'var(--ink)', 'stroke-width':6}, g);
+  el('text', {x:x - 10, y:y - 20, 'text-anchor':'middle', class:'svgt-b'}, g).textContent = '+';
+  if (lab) el('text', {x, y:y + 32, 'text-anchor':'middle', class:'svgt-b'}, g).textContent = lab;
+}
+function bulb(g, x, y, b, r){
+  r = r || 16; b = Math.max(0, Math.min(1.3, b)); const bb = Math.min(1, b);
+  if (b > 0.02) el('circle', {cx:x, cy:y, r:r + 4 + 22*bb, fill:'var(--glow)', opacity:(0.12 + 0.4*bb).toFixed(2)}, g);
+  el('circle', {cx:x, cy:y, r, fill:b > 0.02 ? 'var(--glow)' : 'var(--surface)', 'fill-opacity':b > 0.02 ? (0.35 + 0.65*bb).toFixed(2) : 1, stroke:'var(--ink)', 'stroke-width':2}, g);
+  const k = r*0.7;
+  el('path', {d:`M${x - k} ${y - k} L${x + k} ${y + k} M${x + k} ${y - k} L${x - k} ${y + k}`, stroke:'var(--ink)', 'stroke-width':1.6}, g);
+}
+function socket(g, x, y, r){ el('circle', {cx:x, cy:y, r:r || 16, fill:'var(--surface)', stroke:'var(--muted)', 'stroke-width':1.5, 'stroke-dasharray':'4 3'}, g); }
+function meter(g, x, y, letter, val){
+  el('circle', {cx:x, cy:y, r:15, class:'comp'}, g);
+  el('text', {x, y:y + 5.5, 'text-anchor':'middle', class:'svgt-b', style:'font-size:15px'}, g).textContent = letter;
+  if (val != null) el('text', {x, y:y + 33, 'text-anchor':'middle', class:'svgt', style:'fill:var(--pri);font-weight:600'}, g).textContent = val;
+}
+function resistor(g, x, y, vertical){ if (vertical) el('rect', {x:x - 8, y:y - 24, width:16, height:48, class:'comp'}, g); else el('rect', {x:x - 24, y:y - 8, width:48, height:16, class:'comp'}, g); }
+function dots(g, poly, n, phase, cls){ for (let k = 0; k < n; k++) { const [x, y] = poly.at(k/n + phase); el('circle', {cx:x, cy:y, r:3.3, class:cls || 'eldot'}, g); } }
+function cArrow(ctx, x1, y1, x2, y2, color){
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const a = Math.atan2(y2 - y1, x2 - x1); ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 - 10*Math.cos(a - .5), y2 - 10*Math.sin(a - .5)); ctx.lineTo(x2 - 10*Math.cos(a + .5), y2 - 10*Math.sin(a + .5)); ctx.fill();
+}
+const mkChips = (box, names, def) => names.forEach((n, i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = n; b.dataset.i = i; b.setAttribute('aria-pressed', i === def ? 'true' : 'false'); box.appendChild(b); });
+
+/* ================== nawigacja ================== */
+const slides = [...document.querySelectorAll('.slide')];
+const ids = slides.map(s => s.dataset.id);
+let cur = 0;
+const dotsBox = $('dots'), toc = $('toc');
+slides.forEach((s, i) => {
+  const d = document.createElement('button');
+  d.setAttribute('aria-label', 'Slajd ' + (i + 1) + ': ' + s.getAttribute('aria-label'));
+  d.addEventListener('click', () => go(i));
+  dotsBox.appendChild(d);
+  if (s.dataset.part) { const ph = document.createElement('li'); ph.className = 'part'; ph.textContent = s.dataset.part; toc.appendChild(ph); }
+  if (i > 0) {
+    const li = document.createElement('li');
+    li.innerHTML = `<button><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t">${s.getAttribute('aria-label')}</span></button>`;
+    li.firstChild.addEventListener('click', () => go(i));
+    toc.appendChild(li);
+  }
+});
+function go(i, fromHash){
+  i = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.hidden = k !== i);
+  cur = i;
+  $('counter').textContent = (i + 1) + ' / ' + slides.length;
+  $('bar').style.width = ((i + 1)/slides.length*100) + '%';
+  [...dotsBox.children].forEach((d, k) => d.setAttribute('aria-current', k === i ? 'true' : 'false'));
+  $('prev').disabled = i === 0;
+  $('next').disabled = i === slides.length - 1;
+  $('main').scrollTop = 0;
+  if (onSlideChange) onSlideChange(i);
+  if (!fromHash) { try { history.replaceState(null, '', '#' + ids[i]); } catch(e) {} }
+}
+$('prev').onclick = () => go(cur - 1);
+$('next').onclick = () => go(cur + 1);
+document.addEventListener('keydown', e => {
+  const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') { go(cur + 1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(cur - 1); e.preventDefault(); }
+});
+function fromHash(){ const k = ids.indexOf(location.hash.slice(1)); go(k >= 0 ? k : 0, true); }
+window.addEventListener('hashchange', fromHash);
+fromHash();
+
+/* ================== START: elektrony w drucie ================== */
+(function(){
+  const W = 420, H = 250, cv = $('cHero'), sU = $('hU'), ions = [], E = [];
+  for (let x = 20; x < W; x += 40) for (let y = 95; y <= 175; y += 40) ions.push([x + ((y - 95) % 80 ? 20 : 0), y]);
+  const kick = e => { const a = Math.random()*6.283, v = 60 + Math.random()*80; e.vx = Math.cos(a)*v; e.vy = Math.sin(a)*v; };
+  for (let i = 0; i < 70; i++) { const e = {x:Math.random()*W, y:80 + Math.random()*110}; kick(e); E.push(e); }
+  sims.start = dt => {
+    const ctx = fitCanvas(cv, W, H); if (!ctx) return;
+    const U = +sU.value, drift = -U*7;
+    $('hUo').textContent = nv(U, 1) + ' V';
+    S.hero = {U};
+    for (const e of E) {
+      if (Math.random() < dt*2.5) kick(e);
+      e.x += (e.vx + drift)*dt; e.y += e.vy*dt;
+      if (e.y < 78) { e.y = 78; e.vy = Math.abs(e.vy); } if (e.y > 192) { e.y = 192; e.vy = -Math.abs(e.vy); }
+      if (e.x < 0) e.x += W; if (e.x > W) e.x -= W;
+    }
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = CC['--cu']; ctx.globalAlpha = .2; ctx.fillRect(0, 70, W, 130); ctx.globalAlpha = 1;
+    ctx.strokeStyle = CC['--cu']; ctx.lineWidth = 2; ctx.strokeRect(-2, 70, W + 4, 130);
+    ctx.globalAlpha = .55; ctx.fillStyle = CC['--ion']; ions.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 8, 0, 6.283); ctx.fill(); }); ctx.globalAlpha = 1;
+    ctx.fillStyle = CC['--surface']; ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ions.forEach(([x, y]) => ctx.fillText('+', x, y + 4));
+    ctx.fillStyle = CC['--el']; E.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, 3.6, 0, 6.283); ctx.fill(); });
+    ctx.font = '600 14px "IBM Plex Sans", sans-serif'; ctx.fillStyle = CC['--ink'];
+    if (U > 0) { ctx.textAlign = 'left'; ctx.fillText('+ biegun dodatni', 6, 58); ctx.textAlign = 'right'; ctx.fillText('biegun ujemny −', W - 6, 58); cArrow(ctx, 300, 225, 180, 225, CC['--el']); ctx.font = '12px "IBM Plex Mono", monospace'; ctx.fillStyle = CC['--muted']; ctx.textAlign = 'left'; ctx.fillText('dryf elektronów', 306, 229); }
+    ctx.font = '12px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = CC['--el']; ctx.beginPath(); ctx.arc(12, 30, 4, 0, 6.283); ctx.fill();
+    ctx.fillStyle = CC['--muted']; ctx.fillText('elektron swobodny', 22, 34);
+    ctx.fillStyle = CC['--ion']; ctx.beginPath(); ctx.arc(170, 30, 6, 0, 6.283); ctx.fill();
+    ctx.fillStyle = CC['--muted']; ctx.fillText('jon metalu (+)', 182, 34);
+  };
+})();
+
+/* ================== Co to jest prąd ================== */
+(function(){
+  const W = 420, H = 260, cv = $('cFlow'), ions = [], E = [], P = [], N = []; let mode = 'metal';
+  for (let x = 70; x <= 350; x += 40) for (let y = 55; y <= 175; y += 40) ions.push([x, y]);
+  const rnd = (a, b) => a + Math.random()*(b - a);
+  const kick = (e, v) => { const a = Math.random()*6.283; e.vx = Math.cos(a)*v; e.vy = Math.sin(a)*v; };
+  for (let i = 0; i < 55; i++) { const e = {x:rnd(45, 375), y:rnd(35, 185)}; kick(e, 90); E.push(e); }
+  for (let i = 0; i < 16; i++) { const p = {x:rnd(45, 375), y:rnd(35, 185)}; kick(p, 30); P.push(p); const n = {x:rnd(45, 375), y:rnd(35, 185)}; kick(n, 30); N.push(n); }
+  chipGroup($('pcMode'), b => { mode = b.dataset.m; S.pcMode = mode; });
+  const move = (arr, dt, drift, v) => arr.forEach(e => { if (Math.random() < dt*2.5) kick(e, v); e.x += (e.vx + drift)*dt; e.y += e.vy*dt; if (e.y < 35) { e.y = 35; e.vy = Math.abs(e.vy); } if (e.y > 185) { e.y = 185; e.vy = -Math.abs(e.vy); } if (e.x < 44) e.x = 374; if (e.x > 376) e.x = 46; });
+  sims['prad-co'] = dt => {
+    const ctx = fitCanvas(cv, W, H); if (!ctx) return;
+    const dir = $('pcDir').checked; S.pcDir = dir;
+    if (mode === 'metal') move(E, dt, -40, 90); else { move(P, dt, 28, 30); move(N, dt, -28, 30); }
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = mode === 'metal' ? CC['--cu'] : CC['--pri']; ctx.globalAlpha = .15; ctx.fillRect(40, 25, 340, 170); ctx.globalAlpha = 1;
+    ctx.fillStyle = CC['--ion']; ctx.fillRect(22, 20, 16, 180); ctx.fillStyle = CC['--el']; ctx.fillRect(382, 20, 16, 180);
+    ctx.font = '700 18px "IBM Plex Sans", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = CC['--ink']; ctx.fillText('+', 30, 16); ctx.fillText('−', 390, 16);
+    ctx.strokeStyle = CC['--ink']; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(30, 200); ctx.lineTo(30, 238); ctx.lineTo(200, 238); ctx.moveTo(216, 238); ctx.lineTo(390, 238); ctx.lineTo(390, 200); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(200, 222); ctx.lineTo(200, 254); ctx.stroke(); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(216, 230); ctx.lineTo(216, 246); ctx.stroke();
+    if (mode === 'metal') {
+      ctx.globalAlpha = .5; ctx.fillStyle = CC['--ion']; ions.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 8, 0, 6.283); ctx.fill(); }); ctx.globalAlpha = 1;
+      ctx.fillStyle = CC['--el']; E.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, 3.5, 0, 6.283); ctx.fill(); });
+    } else {
+      ctx.font = '700 11px sans-serif';
+      [[P, '--ion', '+'], [N, '--el', '−']].forEach(([arr, c, s]) => arr.forEach(e => { ctx.fillStyle = CC[c]; ctx.beginPath(); ctx.arc(e.x, e.y, 7, 0, 6.283); ctx.fill(); ctx.fillStyle = CC['--surface']; ctx.fillText(s, e.x, e.y + 4); }));
+    }
+    ctx.font = '12px "IBM Plex Mono", monospace'; ctx.fillStyle = CC['--muted']; ctx.textAlign = 'left';
+    ctx.fillText(mode === 'metal' ? 'metal: płyną elektrony w stronę +' : 'roztwór: jony + płyną do −, jony − do +', 48, 41 + 150);
+    if (dir) { cArrow(ctx, 110, 212, 310, 212, CC['--acc']); ctx.fillStyle = CC['--acc']; ctx.textAlign = 'center'; ctx.font = '600 12px "IBM Plex Sans", sans-serif'; ctx.fillText('kierunek umowny prądu: od + do −', 210, 228); }
+  };
+})();
+
+/* ================== Przewodniki i izolatory ================== */
+(function(){
+  const M = [['Miedź', 1, '--cu'], ['Aluminium', 0.97, '--glass'], ['Grafit (ołówek)', 0.6, '--ink'], ['Woda z solą', 0.35, '--pri'], ['Woda z kranu', 0.06, '--pri'], ['Woda destylowana', 0, '--pri'], ['Plastik', 0, '--alt'], ['Guma', 0, '--ink'], ['Szkło', 0, '--line'], ['Suche drewno', 0, '--acc']];
+  let m = M[0], ph = 0; const box = $('tsMat'), G = $('tsG');
+  mkChips(box, M.map(x => x[0]), 0);
+  S.tsUser = new Set();
+  chipGroup(box, (b, e) => { m = M[+b.dataset.i]; if (e.isTrusted) S.tsUser.add(m[0]); });
+  S.tsPick = i => { [...box.children].forEach((c, k) => c.setAttribute('aria-pressed', k === i ? 'true' : 'false')); m = M[i]; };
+  const poly = Poly([[60, 150], [60, 60], [360, 60], [360, 240], [60, 240], [60, 150]]);
+  sims.przewodniki = dt => {
+    const b = m[1]; ph -= dt*b*0.22;
+    G.innerHTML = '';
+    wire(G, [[60, 139], [60, 60], [244, 60]]); wire(G, [[316, 60], [360, 60], [360, 240], [60, 240], [60, 161]]);
+    cellV(G, 60, 150, '4,5 V');
+    bulb(G, 150, 60, b);
+    el('rect', {x:244, y:47, width:72, height:26, rx:4, fill:`var(${m[2]})`, opacity:m[0].startsWith('Woda') ? 0.45 : 0.85, stroke:'var(--ink)'}, G);
+    [236, 316].forEach(x => el('rect', {x, y:44, width:8, height:32, rx:2, fill:'var(--glass)'}, G));
+    el('text', {x:280, y:98, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = m[0];
+    el('text', {x:280, y:30, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'badany materiał';
+    if (b > 0) dots(G, poly, 20, ph);
+    $('tsR').textContent = b >= 0.3 ? 'dobry przewodnik' : b > 0 ? 'słaby przewodnik' : 'izolator';
+    $('tsB').textContent = b >= 0.9 ? 'świeci jasno' : b >= 0.3 ? 'świeci słabiej' : b > 0 ? 'ledwo się żarzy' : 'nie świeci';
+  };
+})();
+
+/* ================== Obwód ================== */
+(function(){
+  let closed = false, cut = false, bulbIn = true, ph = 0;
+  const G = $('obG'), sw = $('obSw'), ct = $('obCut'), bb = $('obBulb');
+  const upd = () => { sw.textContent = closed ? 'Wyłącz' : 'Włącz'; ct.textContent = cut ? 'Napraw przewód' : 'Przetnij przewód'; bb.textContent = bulbIn ? 'Wykręć żarówkę' : 'Wkręć żarówkę'; };
+  sw.onclick = () => { closed = !closed; upd(); }; ct.onclick = () => { cut = !cut; upd(); }; bb.onclick = () => { bulbIn = !bulbIn; upd(); };
+  S.obSet = (c, k, b) => { closed = c; cut = k; bulbIn = b; upd(); };
+  upd();
+  const poly = Poly([[70, 160], [70, 60], [350, 60], [350, 260], [70, 260], [70, 160]]);
+  sims.obwod = dt => {
+    const on = closed && !cut && bulbIn; if (on) ph -= dt*0.12;
+    S.ob = {on, closed, cut};
+    G.innerHTML = '';
+    wire(G, [[70, 149], [70, 60], [180, 60]]); wire(G, [[240, 60], [350, 60], [350, 144]]);
+    if (cut) { wire(G, [[350, 176], [350, 260], [228, 260]]); wire(G, [[192, 260], [70, 260], [70, 171]]); el('text', {x:210, y:284, 'text-anchor':'middle', class:'svgt', style:'fill:var(--bad)'}, G).textContent = 'przerwa'; }
+    else wire(G, [[350, 176], [350, 260], [70, 260], [70, 171]]);
+    cellV(G, 70, 160, '4,5 V');
+    const sg = el('g', {class:'clk'}, G); sg.addEventListener('click', () => sw.click());
+    el('rect', {x:170, y:20, width:80, height:55, fill:'transparent'}, sg);
+    el('circle', {cx:180, cy:60, r:4, fill:'var(--ink)'}, sg); el('circle', {cx:240, cy:60, r:4, fill:'var(--ink)'}, sg);
+    el('line', {x1:180, y1:60, x2:closed ? 240 : 230, y2:closed ? 60 : 28, stroke:'var(--ink)', 'stroke-width':3, 'stroke-linecap':'round'}, sg);
+    el('text', {x:210, y:92, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'wyłącznik';
+    const bg = el('g', {class:'clk'}, G); bg.addEventListener('click', () => bb.click());
+    if (bulbIn) bulb(bg, 350, 160, on ? 1 : 0); else socket(bg, 350, 160);
+    el('text', {x:326, y:165, 'text-anchor':'end', class:'svgt'}, G).textContent = 'żarówka';
+    if (on) dots(G, poly, 22, ph);
+    if (on && $('obDir').checked) { arrow(G, 110, 44, 160, 44); arrow(G, 370, 90, 370, 130); arrow(G, 300, 278, 250, 278); arrow(G, 50, 235, 50, 195); el('text', {x:135, y:36, 'text-anchor':'middle', class:'svgt', style:'fill:var(--acc)'}, G).textContent = 'kierunek umowny'; }
+    $('obS').textContent = on ? 'zamknięty: płynie prąd, żarówka świeci' : !closed ? 'otwarty: wyłącznik wyłączony' : cut ? 'otwarty: przerwany przewód' : 'otwarty: brak żarówki';
+  };
+})();
+
+/* ================== Natężenie: liczymy ładunek ================== */
+(function(){
+  const W = 420, H = 200, cv = $('cI'), sI = $('niI'), SP = 30; let off = 0, t = 0, q = 0;
+  $('niReset').onclick = () => { t = 0; q = 0; };
+  S.niReset = () => { t = 0; q = 0; };
+  sI.addEventListener('input', () => { t = 0; q = 0; });
+  sims.natezenie = dt => {
+    const ctx = fitCanvas(cv, W, H); if (!ctx) return;
+    const I = +sI.value, v = 2*I*SP, prev = off; off += v*dt;
+    q += (Math.floor(off/SP) - Math.floor(prev/SP))*0.5; t += dt;
+    S.ni = {I, t};
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = CC['--cu']; ctx.globalAlpha = .2; ctx.fillRect(0, 70, W, 60); ctx.globalAlpha = 1;
+    ctx.strokeStyle = CC['--cu']; ctx.lineWidth = 2; ctx.strokeRect(-2, 70, W + 4, 60);
+    const Wn = SP*Math.ceil((W + SP)/SP);
+    ctx.fillStyle = CC['--acc'];
+    for (let k = 0; k*SP < Wn; k++) { const x = (((k*SP - off + 210) % Wn) + Wn) % Wn - SP/2; ctx.beginPath(); ctx.arc(x, 100, 8, 0, 6.283); ctx.fill(); }
+    ctx.strokeStyle = CC['--pri']; ctx.lineWidth = 2.5; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.ellipse(210, 100, 9, 40, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = '600 12px "IBM Plex Sans", sans-serif'; ctx.fillStyle = CC['--pri']; ctx.textAlign = 'center'; ctx.fillText('przekrój przewodu', 210, 52);
+    ctx.font = '12px "IBM Plex Mono", monospace'; ctx.fillStyle = CC['--muted'];
+    ctx.textAlign = 'left'; ctx.fillStyle = CC['--acc']; ctx.beginPath(); ctx.arc(14, 166, 7, 0, 6.283); ctx.fill(); ctx.fillStyle = CC['--muted']; ctx.fillText('= 0,5 C ładunku', 26, 170);
+    ctx.textAlign = 'right'; ctx.fillText('przepłynęło: ' + nv(q, 1) + ' C', W - 8, 170);
+    $('niIo').textContent = nv(I, 1) + ' A';
+    $('niT').textContent = nf(t, 1) + ' s';
+    $('niQ').textContent = nv(q, 1) + ' C';
+    $('niR').textContent = t > 0.4 ? nf(q/t, 2) + ' A' : '…';
+  };
+})();
+
+/* ================== Amperomierz ================== */
+(function(){
+  let pos = 's', on = false, blown = false, tShort = 0, ph = 0;
+  const G = $('amG'), swb = $('amSw');
+  const upd = () => { swb.textContent = on ? 'Otwórz obwód' : 'Zamknij obwód'; };
+  chipGroup($('amPos'), b => { pos = b.dataset.p; tShort = 0; });
+  swb.onclick = () => { on = !on; tShort = 0; upd(); };
+  $('amFix').onclick = () => { blown = false; tShort = 0; };
+  S.amSet = (p, o) => { pos = p; on = o; tShort = 0; upd(); [...$('amPos').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.p === p ? 'true' : 'false')); };
+  S.amFix = () => { blown = false; tShort = 0; };
+  const polyS = Poly([[70, 160], [70, 60], [350, 60], [350, 260], [70, 260], [70, 160]]);
+  const polyR = Poly([[70, 160], [70, 60], [350, 60], [350, 110], [280, 110], [280, 210], [350, 210], [350, 260], [70, 260], [70, 160]]);
+  sims.amperomierz = dt => {
+    let Ia = 0, b = 0, status, short = false;
+    if (pos === 's') {
+      if (on && !blown) { Ia = 0.3; b = 1; }
+      status = !on ? 'obwód otwarty, prąd nie płynie' : blown ? 'bezpiecznik miernika jest przepalony' : 'dobrze: cały prąd płynie przez amperomierz';
+    } else {
+      if (on && !blown) { tShort += dt; Ia = 90; short = true; if (tShort > 0.9) blown = true; }
+      if (on && blown) b = 1;
+      status = !on ? 'obwód otwarty' : blown ? 'w mierniku przepalił się bezpiecznik. Żarówka świeci, ale miernik nic nie mierzy' : 'ZWARCIE! prawie cały prąd płynie przez amperomierz, a nie przez żarówkę';
+    }
+    S.am = {blown, pos};
+    if (on && (b > 0 || short)) ph -= dt*(short ? 1.1 : 0.12);
+    G.innerHTML = '';
+    const sx = 210;
+    if (pos === 's') { wire(G, [[70, 149], [70, 60], [sx - 15, 60]]); wire(G, [[sx + 15, 60], [350, 60], [350, 144]]); }
+    else { wire(G, [[70, 149], [70, 60], [350, 60], [350, 144]]); wire(G, [[350, 110], [280, 110], [280, 145]]); wire(G, [[280, 175], [280, 210], [350, 210]]); }
+    wire(G, [[350, 176], [350, 260], [70, 260], [70, 171]]);
+    cellV(G, 70, 160, '4,5 V');
+    bulb(G, 350, 160, b);
+    const reading = blown ? '—' : si(Ia, 'A');
+    if (pos === 's') meter(G, sx, 60, 'A', reading); else meter(G, 280, 160, 'A', reading);
+    if (blown) { const [mx, my] = pos === 's' ? [sx, 60] : [280, 160]; el('path', {d:`M${mx - 10} ${my - 10} L${mx + 10} ${my + 10} M${mx + 10} ${my - 10} L${mx - 10} ${my + 10}`, stroke:'var(--bad)', 'stroke-width':3}, G); }
+    if (short && Math.random() < 0.6) for (let k = 0; k < 5; k++) { const a = Math.random()*6.283; el('line', {x1:280, y1:160, x2:280 + Math.cos(a)*30, y2:160 + Math.sin(a)*30, stroke:'var(--acc)', 'stroke-width':2}, G); }
+    if (on && (b > 0 || short)) dots(G, (pos === 'r' && !blown) ? polyR : polyS, 22, ph);
+    $('amI').textContent = blown ? '— (uszkodzony)' : short ? 'ponad 50 A!' : si(Ia, 'A');
+    $('amS').textContent = status;
+  };
+})();
+
+/* ================== Wykresy logarytmiczne ================== */
+function logChart(gid, infoId, items, lo, hi, dangerV, dangerLbl, unit, key){
+  const G = $(gid), L0 = Math.log10(lo), L1 = Math.log10(hi), X = v => 170 + 232*(Math.log10(v) - L0)/(L1 - L0), RH = 30, TOP = 40;
+  let sel = 0;
+  function draw(){
+    G.innerHTML = '';
+    for (let d = Math.ceil(L0); d <= L1; d++) el('line', {x1:X(10**d), x2:X(10**d), y1:TOP - 6, y2:TOP + items.length*RH, class:'grid'}, G);
+    const xd = X(dangerV);
+    el('line', {x1:xd, x2:xd, y1:TOP - 10, y2:TOP + items.length*RH, stroke:'var(--bad)', 'stroke-width':2, 'stroke-dasharray':'4 4'}, G);
+    el('text', {x:Math.min(410, xd), y:TOP - 16, 'text-anchor':xd > 330 ? 'end' : 'middle', class:'svgt', style:'fill:var(--bad);font-weight:600'}, G).textContent = dangerLbl;
+    items.forEach(([n, v], i) => {
+      const y = TOP + i*RH, g = el('g', {class:'clk'}, G);
+      g.addEventListener('click', e => { if (e.isTrusted) S[key + 'User'] = n; select(i); });
+      el('rect', {x:0, y, width:420, height:RH, fill:i === sel ? 'var(--pri-soft)' : 'transparent'}, g);
+      el('text', {x:6, y:y + 19, class:'svgt-b', style:'font-size:12px'}, g).textContent = n;
+      const xe = X(v);
+      el('rect', {x:170, y:y + 7, width:Math.max(2, xe - 170), height:RH - 14, rx:3, fill:v >= dangerV ? 'var(--bad)' : 'var(--pri)', opacity:i === sel ? 1 : .65}, g);
+      const inside = xe > 330;
+      el('text', {x:inside ? xe - 5 : xe + 5, y:y + 19, 'text-anchor':inside ? 'end' : 'start', class:'svgt', style:inside ? 'fill:var(--surface);font-weight:600' : ''}, g).textContent = si(v, unit);
+    });
+  }
+  function select(i){ sel = i; draw(); $(infoId).innerHTML = `<b>${items[i][0]}: ${si(items[i][1], unit)}</b><br>${items[i][2]}`; S[key] = items[i][0]; }
+  select(0);
+  return select;
+}
+S.niSel = logChart('niG', 'niInfo', [
+  ['Zegarek elektroniczny', 0.000002, 'Bateria w zegarku wystarcza na kilka lat, bo zegarek pobiera bardzo mały prąd.'],
+  ['Dioda LED', 0.02, 'Typowa mała dioda LED świeci przy ok. 20 mA.'],
+  ['Żarówka LED 8 W', 0.035, 'Żarówka LED zasilana z gniazdka 230 V pobiera ok. 35 mA.'],
+  ['Ładowanie telefonu', 2, 'Szybka ładowarka podaje do telefonu prąd ok. 2 A przy napięciu 5 V.'],
+  ['Odkurzacz', 6.5, 'Odkurzacz o mocy 1500 W pobiera z gniazdka ok. 6,5 A.'],
+  ['Czajnik', 8.7, 'Czajnik o mocy 2000 W pobiera ok. 8,7 A. To jedno z najbardziej „prądożernych” urządzeń w domu.'],
+  ['Rozrusznik samochodu', 200, 'Przy uruchamianiu silnika akumulator daje przez chwilę ok. 200 A.'],
+  ['Błyskawica', 30000, 'Typowa błyskawica to ok. 30 000 A, ale trwa tylko ułamek sekundy.']], 1e-6, 1e5, 0.03, '30 mA: groźne dla człowieka', 'A', 'niPick');
+S.nnSel = logChart('nnG', 'nnInfo', [
+  ['Impuls nerwowy', 0.07, 'Napięcie na błonie komórki nerwowej to ok. 70 mV.'],
+  ['Bateria AA', 1.5, 'Zwykły „paluszek” ma napięcie 1,5 V.'],
+  ['Dioda LED', 2, 'Czerwona dioda LED świeci przy napięciu ok. 2 V.'],
+  ['Akumulator telefonu', 3.7, 'Akumulator w telefonie ma ok. 3,7 V.'],
+  ['Port USB', 5, 'Gniazdo USB i zwykła ładowarka dają 5 V.'],
+  ['Akumulator auta', 12, 'Akumulator samochodowy ma 12 V.'],
+  ['Gniazdko', 230, 'W polskich gniazdkach jest 230 V. To napięcie może zabić!'],
+  ['Tramwaj', 600, 'Sieć zasilająca tramwaje ma zwykle ok. 600 V.'],
+  ['Pociąg PKP', 3000, 'Linie kolejowe w Polsce zasila napięcie 3000 V.'],
+  ['Linia przesyłowa', 400000, 'Największe linie przesyłowe w Polsce mają 400 kV. Wysokie napięcie zmniejsza straty energii w przewodach.'],
+  ['Piorun', 100000000, 'Napięcie między chmurą a ziemią sięga ok. 100 milionów woltów.']], 0.01, 1e9, 50, '50 V: granica bezpieczeństwa', 'V', 'nnPick');
+
+/* ================== Przelicznik ================== */
+(function(){
+  const Q = {'Natężenie':[['A', 1], ['mA', 1e-3], ['µA', 1e-6], ['kA', 1e3]], 'Napięcie':[['V', 1], ['mV', 1e-3], ['kV', 1e3], ['MV', 1e6]], 'Opór':[['Ω', 1], ['kΩ', 1e3], ['MΩ', 1e6]], 'Moc':[['W', 1], ['kW', 1e3], ['MW', 1e6]]};
+  let q = 'Natężenie'; const box = $('jnQ'), sel = $('jnU'), inp = $('jnV');
+  Object.keys(Q).forEach((k, i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = k; b.dataset.q = k; b.setAttribute('aria-pressed', i ? 'false' : 'true'); box.appendChild(b); });
+  const units = () => { sel.innerHTML = ''; Q[q].forEach(([u]) => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); };
+  const fmt = x => x.toLocaleString('pl-PL', {maximumSignificantDigits:6});
+  function draw(){
+    const v = parseFloat(inp.value.replace(/\s/g, '').replace(',', '.')), out = $('jnOut');
+    if (isNaN(v)) { out.innerHTML = '<div><div class="k">Uwaga</div><div class="v vt">Wpisz liczbę</div></div>'; return; }
+    const base = v*Q[q].find(u => u[0] === sel.value)[1];
+    out.innerHTML = Q[q].map(([u, f]) => `<div class="${u === sel.value ? 'hl' : ''}"><div class="k">${u}</div><div class="v">${fmt(base/f)}</div></div>`).join('');
+  }
+  chipGroup(box, b => { q = b.dataset.q; units(); sel.value = Q[q][0][0]; draw(); });
+  inp.addEventListener('input', e => { if (e.isTrusted) S.jnTyped = true; draw(); });
+  sel.addEventListener('change', e => { if (e.isTrusted) S.jnTyped = true; draw(); });
+  chipGroup($('jnPre'), b => { q = b.dataset.q; [...box.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.q === q ? 'true' : 'false')); units(); sel.value = b.dataset.u; inp.value = b.dataset.v.replace('.', ','); draw(); });
+  units(); sel.value = 'mA'; draw();
+})();
+
+/* ================== Napięcie: woda i prąd ================== */
+(function(){
+  const G = $('naG'), sU = $('naU'), sR = $('naR'); let phW = 0, phE = 0;
+  const polyE = Poly([[270, 160], [270, 70], [410, 70], [410, 250], [270, 250], [270, 160]]);
+  sims.napiecie = dt => {
+    const U = +sU.value, R = +sR.value, I = U/R, yt = Math.min(240, 250 - U*15);
+    const polyW = Poly([[40, 250], [40, yt], [170, yt], [170, 250], [40, 250]]);
+    const sp = Math.min(240, 45*I);
+    phW += sp/polyW.L*dt; phE += sp/polyE.L*dt;
+    S.na = {I};
+    G.innerHTML = '';
+    el('path', {d:`M40 250 V${yt} H170`, fill:'none', stroke:'var(--pri)', 'stroke-width':12, opacity:.35, 'stroke-linejoin':'round'}, G);
+    el('path', {d:'M170 250 H40', fill:'none', stroke:'var(--pri)', 'stroke-width':12, opacity:.35}, G);
+    el('path', {d:`M170 ${yt} V250`, fill:'none', stroke:'var(--pri)', 'stroke-width':Math.max(3, 60/R), opacity:.35}, G);
+    el('circle', {cx:40, cy:225, r:16, class:'comp'}, G); arrow(G, 40, 236, 40, 214, 'var(--pri)');
+    el('text', {x:62, y:229, class:'svgt'}, G).textContent = 'pompa';
+    el('text', {x:178, y:(yt + 250)/2 + 4, class:'svgt'}, G).textContent = 'zwężenie';
+    el('line', {x1:20, x2:190, y1:yt, y2:yt, class:'dash'}, G);
+    el('line', {x1:20, x2:190, y1:250, y2:250, class:'dash'}, G);
+    if (U > 0.3) { arrow(G, 12, 250, 12, yt + 4); el('text', {x:60, y:yt - 8, class:'svgt', style:'fill:var(--acc)'}, G).textContent = 'wysokość'; }
+    if (I > 0) dots(G, polyW, 16, phW, 'eldot');
+    wire(G, [[270, 149], [270, 70], [410, 70], [410, 136]]); wire(G, [[410, 184], [410, 250], [270, 250], [270, 171]]);
+    cellV(G, 270, 160, nv(U, 1) + ' V');
+    resistor(G, 410, 160, true);
+    el('text', {x:396, y:164, 'text-anchor':'end', class:'svgt'}, G).textContent = nv(R, 0) + ' Ω';
+    if (I > 0) dots(G, polyE, 16, phE, 'qdot');
+    el('text', {x:105, y:290, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = 'obwód wodny';
+    el('text', {x:340, y:290, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = 'obwód elektryczny';
+    el('text', {x:340, y:40, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'ładunki (kierunek umowny)';
+    el('text', {x:105, y:40, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'woda';
+    $('naUo').textContent = nv(U, 1) + ' V'; $('naRo').textContent = R + ' Ω';
+    $('naUv').textContent = nv(U, 1) + ' V'; $('naIv').textContent = si(I, 'A');
+  };
+})();
+
+/* ================== Źródła: budujemy baterię ================== */
+(function(){
+  let cells = [1, 1, 1], ph = 0; const G = $('zrG');
+  $('zrAdd').onclick = () => { if (cells.length < 6) cells.push(1); };
+  $('zrDel').onclick = () => { if (cells.length > 1) cells.pop(); };
+  $('zrFlip').onclick = () => { cells[cells.length - 1] *= -1; };
+  S.zrSet = arr => { cells = arr.slice(); };
+  sims.zrodla = dt => {
+    const n = cells.length, U = 1.5*cells.reduce((a, b) => a + b, 0), burnt = Math.abs(U) > 7.6, b = burnt ? 0 : Math.min(1.3, (Math.abs(U)/4.5)**2);
+    S.zr = {U, n};
+    const x0 = 210 - n*25, x1 = x0 + n*50;
+    const poly = Poly([[x0, 70], [40, 70], [40, 210], [380, 210], [380, 70], [x1, 70], [x0, 70]]);
+    if (b > 0) ph += Math.sign(U)*(-0.1)*Math.sqrt(b)*dt;
+    G.innerHTML = '';
+    wire(G, [[x0, 70], [40, 70], [40, 210], [194, 210]]); wire(G, [[226, 210], [380, 210], [380, 70], [x1, 70]]);
+    cells.forEach((d, k) => {
+      const x = x0 + k*50;
+      wire(G, [[x, 70], [x + 20, 70]]); wire(G, [[x + 30, 70], [x + 50, 70]]);
+      const xl = d > 0 ? x + 20 : x + 30, xs = d > 0 ? x + 30 : x + 20;
+      el('line', {x1:xl, x2:xl, y1:52, y2:88, stroke:'var(--ink)', 'stroke-width':2.5}, G);
+      el('line', {x1:xs, x2:xs, y1:61, y2:79, stroke:'var(--ink)', 'stroke-width':6}, G);
+      el('text', {x:xl, y:46, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = '+';
+      el('text', {x:x + 25, y:108, 'text-anchor':'middle', class:'svgt', style:d < 0 ? 'fill:var(--bad);font-weight:600' : ''}, G).textContent = d > 0 ? '1,5 V' : 'odwrócone';
+    });
+    if (burnt) { socket(G, 210, 210); el('path', {d:'M198 198 L222 222 M222 198 L198 222', stroke:'var(--bad)', 'stroke-width':3}, G); }
+    else bulb(G, 210, 210, b);
+    el('text', {x:210, y:250, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'żarówka 4,5 V';
+    if (b > 0) dots(G, poly, 24, ph);
+    $('zrU').textContent = nv(U, 1) + ' V';
+    $('zrS').textContent = burnt ? 'przepaliła się! za duże napięcie' : U === 0 ? 'nie świeci: napięcia się znoszą' : b < 0.5 ? 'świeci słabo' : b <= 1.05 ? 'świeci normalnie' : 'świeci za jasno!';
+  };
+})();
+
+/* ================== Woltomierz ================== */
+(function(){
+  const P = {A:[110, 60, 9], B:[300, 60, 6], C:[360, 100, 6], D:[300, 260, 0], E:[110, 260, 0]};
+  let red = 'A', black = 'E', next = 'red', ph = 0; const G = $('vmG');
+  S.vmSet = (r, b) => { red = r; black = b; };
+  const poly = Poly([[60, 160], [60, 60], [360, 60], [360, 260], [60, 260], [60, 160]]);
+  const desc = (r, b) => {
+    if (r === b) return 'wybierz dwa różne punkty';
+    const s = [r, b].sort().join('');
+    if (P[r][2] === P[b][2]) return 'oba punkty łączy sam przewód: brak napięcia';
+    if (s === 'AB' || s === 'AC') return 'napięcie na oporniku R₁';
+    if (['BD', 'BE', 'CD', 'CE'].includes(s)) return 'napięcie na oporniku R₂';
+    if (['AD', 'AE'].includes(s)) return 'napięcie baterii = U₁ + U₂';
+    return '';
+  };
+  sims.woltomierz = dt => {
+    ph -= dt*0.04;
+    G.innerHTML = '';
+    wire(G, [[60, 149], [60, 60], [186, 60]]); wire(G, [[234, 60], [360, 60], [360, 146]]); wire(G, [[360, 194], [360, 260], [60, 260], [60, 171]]);
+    cellV(G, 60, 160, '9 V');
+    resistor(G, 210, 60, false); el('text', {x:210, y:40, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'R₁ = 1 kΩ';
+    resistor(G, 360, 170, true); el('text', {x:346, y:174, 'text-anchor':'end', class:'svgt'}, G).textContent = 'R₂ = 2 kΩ';
+    dots(G, poly, 18, ph);
+    const V = P[red][2] - P[black][2];
+    const [rx, ry] = P[red], [bx, by] = P[black];
+    el('path', {d:`M${rx} ${ry} Q${(rx + 200)/2} ${(ry + 190)/2 - 20} 196 182`, fill:'none', stroke:'var(--bad)', 'stroke-width':2.2}, G);
+    el('path', {d:`M${bx} ${by} Q${(bx + 224)/2} ${(by + 190)/2 + 20} 224 182`, fill:'none', stroke:'var(--ink)', 'stroke-width':2.2, 'stroke-dasharray':'2 0'}, G);
+    el('rect', {x:180, y:150, width:60, height:46, rx:8, fill:'var(--surface)', stroke:'var(--ink)', 'stroke-width':2}, G);
+    el('text', {x:210, y:170, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = 'V';
+    el('text', {x:210, y:189, 'text-anchor':'middle', class:'svgt', style:'fill:var(--pri);font-weight:600'}, G).textContent = nv(V, 1) + ' V';
+    Object.entries(P).forEach(([k, [x, y]]) => {
+      const g = el('g', {class:'clk'}, G);
+      g.addEventListener('click', e => { if (e.isTrusted) S.vmUser = true; if (next === 'red') { red = k; next = 'black'; } else { black = k; next = 'red'; } });
+      el('circle', {cx:x, cy:y, r:14, fill:'transparent'}, g);
+      el('circle', {cx:x, cy:y, r:7, fill:k === red ? 'var(--bad)' : k === black ? 'var(--ink)' : 'var(--surface)', stroke:'var(--ink)', 'stroke-width':2}, g);
+      const lp = {A:[0, -14], B:[0, -14], C:[18, 4], D:[0, 24], E:[0, 24]}[k];
+      el('text', {x:x + lp[0], y:y + lp[1], 'text-anchor':'middle', class:'svgt-b'}, g).textContent = k;
+    });
+    el('text', {x:210, y:300, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'następne kliknięcie: ' + (next === 'red' ? 'czerwona sonda (+)' : 'czarna sonda (−)');
+    S.vm = {V, same:red !== black && P[red][2] === P[black][2]};
+    $('vmV').textContent = nv(V, 1) + ' V';
+    $('vmInfo').textContent = desc(red, black);
+  };
+})();
+
+/* ================== Prawo Ohma ================== */
+(function(){
+  let R = 20, ph = 0; const G = $('ohG'), sU = $('ohU');
+  chipGroup($('ohR'), b => { R = +b.dataset.r; });
+  const poly = Poly([[40, 170], [40, 60], [200, 60], [200, 260], [40, 260], [40, 170]]);
+  const X = u => 275 + u*12.5, Y = i => 250 - i*170;
+  sims.ohm = dt => {
+    const U = +sU.value, I = U/R; ph -= dt*I*0.25;
+    S.oh = {I};
+    G.innerHTML = '';
+    wire(G, [[40, 140], [40, 60], [105, 60]]); wire(G, [[135, 60], [200, 60], [200, 136]]); wire(G, [[200, 184], [200, 260], [40, 260], [40, 200]]);
+    el('rect', {x:16, y:140, width:48, height:60, rx:6, class:'comp'}, G);
+    el('text', {x:40, y:166, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = nv(U, 1);
+    el('text', {x:40, y:182, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'V';
+    el('text', {x:40, y:216, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'zasilacz';
+    meter(G, 120, 60, 'A', si(I, 'A'));
+    resistor(G, 200, 160, true); el('text', {x:186, y:164, 'text-anchor':'end', class:'svgt'}, G).textContent = R + ' Ω';
+    wire(G, [[200, 100], [238, 100], [238, 145]]); wire(G, [[238, 175], [238, 220], [200, 220]]);
+    meter(G, 238, 160, 'V');
+    el('text', {x:238, y:196, 'text-anchor':'middle', class:'svgt', style:'fill:var(--pri);font-weight:600'}, G).textContent = nv(U, 1) + ' V';
+    if (I > 0) dots(G, poly, 20, ph);
+    el('line', {x1:275, x2:430, y1:250, y2:250, class:'tick'}, G); el('line', {x1:275, x2:275, y1:40, y2:250, class:'tick'}, G);
+    [0, 4, 8, 12].forEach(u => el('text', {x:X(u), y:266, 'text-anchor':'middle', class:'svgt'}, G).textContent = u);
+    [0.4, 0.8, 1.2].forEach(i => { el('line', {x1:275, x2:425, y1:Y(i), y2:Y(i), class:'grid'}, G); el('text', {x:270, y:Y(i) + 4, 'text-anchor':'end', class:'svgt'}, G).textContent = nv(i, 1); });
+    el('text', {x:430, y:284, 'text-anchor':'end', class:'svgt'}, G).textContent = 'U [V]';
+    el('text', {x:280, y:34, class:'svgt'}, G).textContent = 'I [A]';
+    [10, 20, 40].forEach(r => { const ue = Math.min(12, 1.2*r); el('line', {x1:X(0), y1:Y(0), x2:X(ue), y2:Y(ue/r), stroke:r === R ? 'var(--pri)' : 'var(--line)', 'stroke-width':r === R ? 3 : 1.5}, G); el('text', {x:X(ue) + 3, y:Y(ue/r) + (r === 10 ? 12 : -4), class:'svgt'}, G).textContent = r + ' Ω'; });
+    el('circle', {cx:X(U), cy:Y(I), r:6, fill:'var(--acc)', stroke:'var(--surface)', 'stroke-width':2}, G);
+    $('ohUo').textContent = nv(U, 1) + ' V';
+    $('ohI').textContent = si(I, 'A'); $('ohV').textContent = nv(U, 1) + ' V';
+    $('ohRr').textContent = I > 0 ? nv(U/I, 1) + ' Ω' : '—';
+  };
+})();
+
+/* ================== Charakterystyka I(U) ================== */
+(function(){
+  const F = [u => u/20, u => u/40, u => u > 0 ? 0.12*Math.pow(u, 0.55) : 0], COL = ['--pri', '--alt', '--acc'], NAME = ['Opornik 20 Ω', 'Opornik 40 Ω', 'Żarówka'];
+  const data = [[], [], []]; let e = 0; const G = $('chG'), sU = $('chU');
+  const X = u => 50 + u*29, Y = i => 260 - i*320;
+  chipGroup($('chEl'), b => { e = +b.dataset.e; draw(); });
+  const save = () => { const U = +sU.value; if (!data[e].some(p => p[0] === U)) data[e].push([U, F[e](U)]); data[e].sort((a, b) => a[0] - b[0]); draw(); };
+  $('chSave').onclick = e2 => { if (e2.isTrusted) S.chUser = true; save(); };
+  $('chClear').onclick = () => { data[e] = []; draw(); };
+  S.chSave = save; S.chClear = () => { data[0] = []; data[1] = []; data[2] = []; draw(); };
+  S.chPick = i => { e = i; [...$('chEl').children].forEach((c, k) => c.setAttribute('aria-pressed', k === i ? 'true' : 'false')); draw(); };
+  function draw(){
+    const U = +sU.value;
+    G.innerHTML = '';
+    for (let u = 0; u <= 12; u += 2) { el('line', {x1:X(u), x2:X(u), y1:30, y2:260, class:'grid'}, G); el('text', {x:X(u), y:276, 'text-anchor':'middle', class:'svgt'}, G).textContent = u; }
+    for (let i = 0.1; i <= 0.7001; i += 0.1) { el('line', {x1:50, x2:400, y1:Y(i), y2:Y(i), class:'grid'}, G); el('text', {x:44, y:Y(i) + 4, 'text-anchor':'end', class:'svgt'}, G).textContent = nv(i, 1); }
+    el('line', {x1:50, x2:400, y1:260, y2:260, class:'tick'}, G); el('line', {x1:50, x2:50, y1:30, y2:260, class:'tick'}, G);
+    el('text', {x:404, y:294, 'text-anchor':'end', class:'svgt'}, G).textContent = 'U [V]';
+    el('text', {x:56, y:24, class:'svgt'}, G).textContent = 'I [A]';
+    data.forEach((pts, k) => {
+      if (pts.length >= 2) {
+        if (k < 2) { const sl = pts.reduce((a, p) => a + p[0]*p[1], 0)/pts.reduce((a, p) => a + p[0]*p[0], 0); el('line', {x1:X(0), y1:Y(0), x2:X(12), y2:Y(12*sl), stroke:`var(${COL[k]})`, 'stroke-width':2, opacity:.7}, G); }
+        else el('path', {d:'M' + [[0, 0], ...pts].map(p => X(p[0]) + ' ' + Y(p[1])).join(' L'), fill:'none', stroke:`var(${COL[k]})`, 'stroke-width':2, opacity:.7}, G);
+      }
+      pts.forEach(p => el('circle', {cx:X(p[0]), cy:Y(p[1]), r:5, fill:`var(${COL[k]})`}, G));
+    });
+    el('circle', {cx:X(U), cy:Y(F[e](U)), r:8, fill:'none', stroke:`var(${COL[e]})`, 'stroke-width':2, 'stroke-dasharray':'3 2'}, G);
+    NAME.forEach((n, k) => { el('circle', {cx:70 + k*115, cy:44, r:5, fill:`var(${COL[k]})`}, G); el('text', {x:80 + k*115, y:48, class:'svgt'}, G).textContent = n; });
+    $('chUo').textContent = nv(U, 1) + ' V';
+    const pts = data[e];
+    $('chTab').innerHTML = `<span class="lbl">Pomiary: ${NAME[e]}</span>` + (pts.length ? pts.slice(-6).map(p => `U = ${nv(p[0], 1)} V, I = ${nv(p[1], 3)} A, U/I = ${p[1] > 0 ? nv(p[0]/p[1], 1) + ' Ω' : '—'}`).join('<br>') : 'brak pomiarów: ustaw napięcie i kliknij „Zapisz pomiar”');
+    S.ch = {bulb:data[2].length};
+  }
+  sU.oninput = draw; draw();
+})();
+
+/* ================== Opór przewodu ================== */
+(function(){
+  const M = [['Srebro', 0.016, '--glass'], ['Miedź', 0.017, '--cu'], ['Aluminium', 0.028, '--muted'], ['Żelazo', 0.1, '--ink'], ['Nikielina', 0.42, '--alt']];
+  let m = M[1]; const G = $('opG'), sL = $('opL'), sS = $('opS'), box = $('opMat');
+  mkChips(box, M.map(x => x[0] + ' · ' + nv(x[1], 3)), 1);
+  chipGroup(box, b => { m = M[+b.dataset.i]; draw(); });
+  S.opPick = i => { [...box.children].forEach((c, k) => c.setAttribute('aria-pressed', k === i ? 'true' : 'false')); m = M[i]; draw(); };
+  function draw(){
+    const l = +sL.value, Sx = +sS.value, R = m[1]*l/Sx, I = 4.5/(15 + R), b = Math.min(1, (I/0.3)**2);
+    S.op = {R};
+    G.innerHTML = '';
+    const xe = 50 + 300*l/10, th = 3 + 16*Math.sqrt(Sx/2.5);
+    el('rect', {x:50, y:80 - th/2, width:xe - 50, height:th, rx:th/2, fill:`var(${m[2]})`}, G);
+    el('text', {x:(50 + xe)/2, y:80 - th/2 - 10, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'l = ' + nv(l, 1) + ' m';
+    el('text', {x:50, y:80 + th/2 + 18, class:'svgt'}, G).textContent = 'S = ' + nv(Sx, 1) + ' mm², ' + m[0].toLowerCase();
+    wire(G, [[50, 80], [30, 80], [30, 200], [134, 200]]); wire(G, [[156, 200], [284, 200]]); wire(G, [[316, 200], [390, 200], [390, 80], [xe, 80]]);
+    cellH(G, 145, 200, '4,5 V');
+    bulb(G, 300, 200, b);
+    el('text', {x:300, y:236, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'żarówka 15 Ω';
+    $('opLo').textContent = nv(l, 1) + ' m'; $('opSo').textContent = nv(Sx, 1) + ' mm²';
+    $('opR').textContent = si(R, 'Ω'); $('opI').textContent = si(I, 'A');
+  }
+  sL.oninput = sS.oninput = draw; draw();
+})();
+
+/* ================== Połączenie szeregowe ================== */
+(function(){
+  const POS = {1:[[215, 60]], 2:[[160, 60], [280, 60]], 3:[[130, 60], [240, 60], [370, 160]], 4:[[130, 60], [250, 60], [370, 115], [370, 205]]};
+  let n = 2, rem = [false, false, false, false], ph = 0; const G = $('szG');
+  chipGroup($('szN'), b => { n = +b.dataset.n; rem = [false, false, false, false]; });
+  S.szSet = (k, r) => { n = k; rem = r ? r.slice() : [false, false, false, false]; [...$('szN').children].forEach(c => c.setAttribute('aria-pressed', +c.dataset.n === n ? 'true' : 'false')); };
+  const poly = Poly([[60, 160], [60, 60], [370, 60], [370, 260], [60, 260], [60, 160]]);
+  sims.szeregowe = dt => {
+    const ok = rem.slice(0, n).every(r => !r), I = ok ? 12/(12*n) : 0, b = I*I;
+    if (ok) ph -= dt*I*0.25;
+    S.sz = {n, anyRem:rem.slice(0, n).some(r => r)};
+    G.innerHTML = '';
+    wire(G, [[60, 149], [60, 60], [370, 60], [370, 260], [60, 260], [60, 171]]);
+    cellV(G, 60, 160, '12 V');
+    POS[n].forEach(([x, y], i) => {
+      const g = el('g', {class:'clk'}, G);
+      g.addEventListener('click', e => { if (e.isTrusted) S.szUser = true; rem[i] = !rem[i]; });
+      el('rect', {x:x - 18, y:y - 18, width:36, height:36, fill:'var(--surface)'}, g);
+      if (rem[i]) socket(g, x, y); else bulb(g, x, y, b);
+      const ly = y === 60 ? y - 26 : y + 4, lx = y === 60 ? x : x - 24;
+      el('text', {x:lx, y:ly, 'text-anchor':y === 60 ? 'middle' : 'end', class:'svgt'}, G).textContent = nv(I*12, 1) + ' V';
+    });
+    if (ok) dots(G, poly, 24, ph);
+    $('szI').textContent = ok ? si(I, 'A') : '0 A (przerwa)';
+    $('szU').textContent = nv(I*12, 1) + ' V';
+    $('szR').textContent = nv(12*n, 0) + ' Ω';
+  };
+})();
+
+/* ================== Połączenie równoległe ================== */
+(function(){
+  let n = 2, rem = [false, false, false, false], ph = 0; const G = $('rwG');
+  chipGroup($('rwN'), b => { n = +b.dataset.n; rem = [false, false, false, false]; });
+  S.rwSet = (k, r) => { n = k; rem = r ? r.slice() : [false, false, false, false]; [...$('rwN').children].forEach(c => c.setAttribute('aria-pressed', +c.dataset.n === n ? 'true' : 'false')); };
+  sims.rownolegle = dt => {
+    const xs = n === 1 ? [250] : Array.from({length:n}, (_, k) => 150 + k*200/(n - 1));
+    const act = xs.map((x, i) => !rem[i]), a = act.filter(Boolean).length;
+    ph -= dt*0.25;
+    S.rw = {I:a};
+    G.innerHTML = '';
+    wire(G, [[60, 149], [60, 60], [xs[xs.length - 1], 60]]); wire(G, [[xs[xs.length - 1], 260], [60, 260], [60, 171]]);
+    cellV(G, 60, 160, '12 V');
+    xs.forEach((x, i) => {
+      wire(G, [[x, 60], [x, 144]]); wire(G, [[x, 176], [x, 260]]);
+      el('circle', {cx:x, cy:60, r:4, fill:'var(--ink)'}, G); el('circle', {cx:x, cy:260, r:4, fill:'var(--ink)'}, G);
+      const g = el('g', {class:'clk'}, G);
+      g.addEventListener('click', e => { if (e.isTrusted) S.rwUser = true; rem[i] = !rem[i]; });
+      el('rect', {x:x - 18, y:142, width:36, height:36, fill:'var(--surface)'}, g);
+      if (rem[i]) socket(g, x, 160); else bulb(g, x, 160, 1);
+      el('text', {x:x + 20, y:200, class:'svgt'}, G).textContent = act[i] ? '1 A' : '0 A';
+      if (act[i]) dots(G, Poly([[60, 160], [60, 60], [x, 60], [x, 260], [60, 260], [60, 160]]), 16, ph + i*0.13);
+    });
+    $('rwI').textContent = a + ' A';
+    $('rwIk').textContent = a ? '1 A' : '0 A';
+    $('rwR').textContent = a ? nv(12/a, 1) + ' Ω' : 'brak przepływu';
+  };
+})();
+
+/* ================== Moc i energia ================== */
+(function(){
+  const D = [['Żarówka LED', 8], ['Laptop', 60], ['Telewizor', 100], ['Odkurzacz', 1500], ['Czajnik', 2000], ['Piekarnik', 3000]];
+  let d = D[4], ang = 0, eLive = 0; const box = $('moDev'), sT = $('moT'), sD = $('moD'), G = $('moG');
+  mkChips(box, D.map(x => x[0] + ' · ' + x[1] + ' W'), 4);
+  chipGroup(box, b => { d = D[+b.dataset.i]; calc(); });
+  S.moPick = i => { [...box.children].forEach((c, k) => c.setAttribute('aria-pressed', k === i ? 'true' : 'false')); d = D[i]; calc(); };
+  function calc(){
+    const P = d[1], t = +sT.value, days = +sD.value, E = P*t*days/1000;
+    S.mo = {dev:d[0], t, days};
+    $('moTo').textContent = nv(t, 1) + ' h'; $('moDo').textContent = days + ' dni';
+    $('moI').textContent = si(P/230, 'A'); $('moE').textContent = nv(E, 2) + ' kWh'; $('moC').textContent = nf(E, 2) + ' zł';
+    $('moCalc').innerHTML = `<span class="lbl">Obliczenie</span>I = P / U = ${P} W : 230 V = ${nv(P/230, 3)} A<br>W = P · t = ${nv(P/1000, 3)} kW · ${nv(t, 1)} h · ${days} = <b>${nv(E, 2)} kWh</b><br>Koszt: ${nv(E, 2)} kWh · 1 zł = <b>${nf(E, 2)} zł</b>`;
+  }
+  sT.oninput = sD.oninput = calc; calc();
+  sims.moc = dt => {
+    const P = d[1]; ang += P/2000*6*dt; eLive += P/1000*dt;
+    G.innerHTML = '';
+    el('rect', {x:20, y:12, width:380, height:126, rx:14, fill:'var(--bg)', stroke:'var(--glass)', 'stroke-width':2}, G);
+    el('rect', {x:40, y:30, width:200, height:44, rx:6, fill:'var(--ink)'}, G);
+    el('text', {x:228, y:61, 'text-anchor':'end', style:'fill:var(--glow);font:500 22px var(--f-mono)'}, G).textContent = nf(eLive, 3) + ' kWh';
+    el('text', {x:40, y:96, class:'svgt'}, G).textContent = 'licznik energii';
+    el('text', {x:40, y:114, class:'svgt'}, G).textContent = 'czas przyspieszony: 1 s = 1 h';
+    el('ellipse', {cx:320, cy:92, rx:58, ry:11, fill:'var(--glass)', opacity:.5}, G);
+    const mx = 320 + 58*Math.cos(ang), my = 92 + 11*Math.sin(ang);
+    if (Math.sin(ang) > -0.2) el('rect', {x:mx - 3, y:my - 6, width:6, height:10, fill:'var(--bad)'}, G);
+    el('text', {x:320, y:48, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = d[0] + ': ' + d[1] + ' W';
+  };
+})();
+
+/* ================== Skutki przepływu prądu ================== */
+(function(){
+  const INFO = ['<b>Skutek cieplny.</b> Prąd nagrzewa przewodnik, szczególnie cienki drut o dużym oporze. Tak działają czajnik, żelazko, piekarnik i suszarka.', '<b>Skutek świetlny.</b> Rozgrzane włókno albo dioda LED świecą. Świecą też gazy, przez które płynie prąd, np. w świetlówce i w błyskawicy.', '<b>Skutek magnetyczny.</b> Wokół przewodu z prądem powstaje pole magnetyczne i igła kompasu się odchyla. Na tym działają elektromagnes, silnik i głośnik.', '<b>Skutek chemiczny.</b> Prąd płynący przez roztwór rozkłada go. W wodzie na elektrodach wydzielają się pęcherzyki gazów: wodoru i tlenu. Tak ładuje się akumulatory.'];
+  let e = 0, on = false, temp = 20, glow = 0, needle = 0, bub = [], acc = 0; const G = $('skG'), btn = $('skOn');
+  const upd = () => { btn.textContent = on ? 'Wyłącz prąd' : 'Włącz prąd'; $('skInfo').innerHTML = INFO[e]; };
+  chipGroup($('skE'), b => { e = +b.dataset.e; bub = []; upd(); });
+  btn.onclick = ev => { on = !on; upd(); };
+  S.skSet = (k, o) => { e = k; on = o; bub = []; [...$('skE').children].forEach((c, i) => c.setAttribute('aria-pressed', i === k ? 'true' : 'false')); upd(); };
+  S.skSeen = new Set();
+  upd();
+  sims.skutki = (dt, frozen) => {
+    if (frozen) { temp = on ? 95 : 20; glow = on ? 1 : 0; needle = on ? 80 : 0; }
+    else { temp = on ? Math.min(95, temp + 25*dt) : Math.max(20, temp - 12*dt); glow += ((on ? 1 : 0) - glow)*Math.min(1, dt*6); needle += ((on ? 80 : 0) - needle)*Math.min(1, dt*3); }
+    if (on) S.skSeen.add(e);
+    G.innerHTML = '';
+    el('text', {x:16, y:24, class:'svgt-b', style:on ? 'fill:var(--good)' : 'fill:var(--muted)'}, G).textContent = on ? 'prąd płynie' : 'prąd wyłączony';
+    if (e === 0) {
+      wire(G, [[60, 130], [150, 130]]); wire(G, [[290, 130], [330, 130]]);
+      let d = 'M150 130'; for (let k = 0; k < 8; k++) d += ` L${158 + k*17.5} ${k % 2 ? 150 : 110}`; d += ' L290 130';
+      const hot = (temp - 20)/75;
+      el('path', {d, fill:'none', stroke:'var(--glass)', 'stroke-width':4, 'stroke-linejoin':'round'}, G);
+      el('path', {d, fill:'none', stroke:'var(--bad)', 'stroke-width':4, 'stroke-linejoin':'round', opacity:hot.toFixed(2)}, G);
+      if (hot > 0.5) [180, 220, 260].forEach(x => el('path', {d:`M${x} 98 q-6 -12 0 -24 q6 -12 0 -24`, fill:'none', stroke:'var(--bad)', 'stroke-width':2, opacity:(hot - 0.5).toFixed(2)}, G));
+      el('text', {x:220, y:180, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'grzałka z drutu oporowego';
+      const ty = T => 230 - T*1.8;
+      el('rect', {x:352, y:40, width:16, height:196, rx:8, fill:'var(--bg)', stroke:'var(--glass)', 'stroke-width':2}, G);
+      el('rect', {x:356, y:ty(temp), width:8, height:232 - ty(temp), fill:'var(--bad)'}, G);
+      el('text', {x:344, y:ty(temp) + 4, 'text-anchor':'end', class:'svgt-b'}, G).textContent = nf(temp, 0) + ' °C';
+    } else if (e === 1) {
+      wire(G, [[60, 230], [200, 230], [200, 160]]); wire(G, [[240, 160], [240, 230], [340, 230]]);
+      bulb(G, 220, 120, glow, 34);
+      el('text', {x:220, y:250, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'żarówka';
+    } else if (e === 2) {
+      el('line', {x1:140, y1:20, x2:140, y2:240, stroke:'var(--cu)', 'stroke-width':8, 'stroke-linecap':'round'}, G);
+      if (on) arrow(G, 120, 200, 120, 80);
+      el('text', {x:150, y:250, class:'svgt'}, G).textContent = 'przewód';
+      el('circle', {cx:270, cy:130, r:62, class:'comp'}, G);
+      el('text', {x:270, y:84, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = 'N';
+      el('text', {x:270, y:186, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = 'S';
+      const ng = el('g', {transform:`rotate(${needle} 270 130)`}, G);
+      el('path', {d:'M270 82 L279 130 L261 130 Z', fill:'var(--bad)'}, ng);
+      el('path', {d:'M270 178 L279 130 L261 130 Z', fill:'var(--glass)'}, ng);
+      el('circle', {cx:270, cy:130, r:4, fill:'var(--ink)'}, G);
+    } else {
+      el('rect', {x:110, y:90, width:200, height:140, fill:'var(--pri)', opacity:.2}, G);
+      el('path', {d:'M110 70 V230 H310 V70', class:'glass'}, G);
+      [[170, '+', '--ion'], [250, '−', '--el']].forEach(([x, s, c]) => { el('rect', {x:x - 5, y:50, width:10, height:160, fill:`var(${c})`}, G); el('text', {x, y:40, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = s; });
+      if (on && !frozen) { acc += dt; while (acc > 0.06) { acc -= 0.06; bub.push({x:250 + (Math.random() - .5)*16, y:205, r:2 + Math.random()*2}); if (Math.random() < 0.5) bub.push({x:170 + (Math.random() - .5)*16, y:205, r:2 + Math.random()*2}); } }
+      bub = bub.filter(b => (b.y -= 60*dt) > 95);
+      bub.forEach(b => el('circle', {cx:b.x, cy:b.y, r:b.r, fill:'none', stroke:'var(--ink)', 'stroke-width':1.2}, G));
+      el('text', {x:210, y:250, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'tlen (+)          wodór (−)';
+    }
+  };
+})();
+
+/* ================== Bezpiecznik ================== */
+(function(){
+  const D = [['Czajnik', 2000], ['Suszarka', 1800], ['Żelazko', 2200], ['Odkurzacz', 1500], ['Telewizor', 100], ['Laptop', 60], ['Lampka LED', 8]];
+  const on = new Set([4, 5]); let tripped = false, overT = 0, shortA = false, cause = ''; const box = $('bzDev'), G = $('bzG');
+  D.forEach(([n, p], i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = n + ' · ' + p + ' W'; b.dataset.i = i; b.setAttribute('aria-pressed', on.has(i) ? 'true' : 'false'); box.appendChild(b); });
+  const sync = () => [...box.children].forEach((c, i) => c.setAttribute('aria-pressed', on.has(i) ? 'true' : 'false'));
+  box.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const i = +b.dataset.i; on.has(i) ? on.delete(i) : on.add(i); sync(); });
+  $('bzShort').onclick = () => { if (!tripped) shortA = true; };
+  $('bzReset').onclick = () => { tripped = false; overT = 0; shortA = false; };
+  S.bzSet = arr => { on.clear(); arr.forEach(i => on.add(i)); sync(); };
+  S.bzShort = () => { if (!tripped) shortA = true; };
+  S.bzReset = () => { tripped = false; overT = 0; shortA = false; };
+  S.bzTrip = {};
+  sims.bezpiecznik = dt => {
+    const sumP = [...on].reduce((a, i) => a + D[i][1], 0);
+    let I = tripped ? 0 : shortA ? 1500 : sumP/230;
+    if (!tripped) {
+      if (shortA) overT += dt*8; else if (I > 16) overT += dt; else overT = Math.max(0, overT - dt);
+      if (overT > 1.6) { tripped = true; cause = shortA ? 'zwarcie' : 'przeciążenie'; S.bzTrip[cause] = true; shortA = false; I = 0; }
+    }
+    G.innerHTML = '';
+    el('rect', {x:20, y:30, width:90, height:120, rx:8, class:'comp'}, G);
+    el('text', {x:65, y:54, 'text-anchor':'middle', class:'svgt-b'}, G).textContent = '16 A';
+    el('rect', {x:55, y:66, width:20, height:56, rx:4, fill:'var(--bg)', stroke:'var(--ink)'}, G);
+    el('rect', {x:57, y:tripped ? 96 : 68, width:16, height:24, rx:3, fill:tripped ? 'var(--bad)' : 'var(--good)'}, G);
+    el('text', {x:65, y:142, 'text-anchor':'middle', class:'svgt'}, G).textContent = tripped ? 'wyłączony' : 'włączony';
+    const hot = Math.min(1, Math.max(0, (I - 10)/14));
+    el('path', {d:'M110 90 H160 V200 H180', fill:'none', stroke:'var(--ink)', 'stroke-width':4}, G);
+    el('path', {d:'M110 90 H160 V200 H180', fill:'none', stroke:'var(--bad)', 'stroke-width':4, opacity:hot.toFixed(2)}, G);
+    el('rect', {x:180, y:186, width:220, height:28, rx:6, class:'comp'}, G);
+    D.forEach((d, i) => { const x = 192 + i*30; el('circle', {cx:x + 6, cy:200, r:7, fill:on.has(i) ? (tripped ? 'var(--glass)' : 'var(--acc)') : 'var(--bg)', stroke:'var(--ink)'}, G); });
+    el('text', {x:290, y:234, 'text-anchor':'middle', class:'svgt'}, G).textContent = 'listwa z urządzeniami';
+    const BX = i => 180 + Math.min(i, 40)*5.5;
+    el('rect', {x:180, y:40, width:220, height:22, rx:4, fill:'var(--bg)', stroke:'var(--line)'}, G);
+    el('rect', {x:180, y:40, width:BX(I) - 180, height:22, rx:4, fill:I > 16 ? 'var(--bad)' : 'var(--pri)'}, G);
+    el('line', {x1:BX(16), x2:BX(16), y1:32, y2:70, stroke:'var(--bad)', 'stroke-width':2, 'stroke-dasharray':'3 3'}, G);
+    el('text', {x:BX(16), y:84, 'text-anchor':'middle', class:'svgt', style:'fill:var(--bad)'}, G).textContent = '16 A';
+    el('text', {x:180, y:28, class:'svgt'}, G).textContent = 'natężenie (skala do 40 A)';
+    if (shortA && !tripped) for (let k = 0; k < 6; k++) { const a = Math.random()*6.283; el('line', {x1:300, y1:200, x2:300 + Math.cos(a)*34, y2:200 + Math.sin(a)*34, stroke:'var(--acc)', 'stroke-width':2.5}, G); }
+    $('bzI').textContent = I >= 1000 ? 'ponad 1000 A!' : nv(I, 1) + ' A';
+    $('bzS').textContent = tripped ? 'bezpiecznik wyłączył prąd: ' + cause : shortA ? 'ZWARCIE!' : I > 16 ? 'przeciążenie! przewody się grzeją…' : I > 0 ? 'w normie' : 'nic nie jest włączone';
+  };
+})();
+
+/* ================== Prąd a ciało ================== */
+(function(){
+  let U = 4.5, Rs = 100000; const G = $('bsG');
+  chipGroup($('bsU'), b => { U = +b.dataset.u; draw(); });
+  chipGroup($('bsSkin'), b => { Rs = +b.dataset.r; draw(); });
+  S.bsSet = (u, r) => { U = u; Rs = r; [...$('bsU').children].forEach(c => c.setAttribute('aria-pressed', +c.dataset.u === u ? 'true' : 'false')); [...$('bsSkin').children].forEach(c => c.setAttribute('aria-pressed', +c.dataset.r === r ? 'true' : 'false')); draw(); };
+  const Y = mA => 270 - (Math.log10(Math.max(0.1, Math.min(1000, mA))) + 1)*60;
+  const Z = [[0.1, 1, 'prawie nieodczuwalny', '--good'], [1, 10, 'mrowienie, ból', '--acc'], [10, 30, 'skurcz mięśni: nie można puścić przewodu', '--acc'], [30, 75, 'zaburzenia oddychania', '--bad'], [75, 1000, 'migotanie komór serca: zagrożenie życia', '--bad']];
+  function draw(){
+    const R = U >= 100 ? 1000 : Rs, I = U/R, mA = I*1000;
+    S.bs = {U, wet:Rs === 1000};
+    G.innerHTML = '';
+    Z.forEach(([a, b, t, c], k) => {
+      el('rect', {x:120, y:Y(b), width:30, height:Y(a) - Y(b), fill:`var(${c})`, opacity:(0.3 + k*0.15).toFixed(2)}, G);
+      el('text', {x:160, y:(Y(a) + Y(b))/2 + 4, class:'svgt', style:'fill:var(--ink)'}, G).textContent = t;
+    });
+    [0.1, 1, 10, 100, 1000].forEach(v => { el('line', {x1:112, x2:120, y1:Y(v), y2:Y(v), class:'tick'}, G); el('text', {x:108, y:Y(v) + 4, 'text-anchor':'end', class:'svgt'}, G).textContent = v >= 1000 ? '1 A' : nv(v, 1) + ' mA'; });
+    el('line', {x1:116, x2:156, y1:Y(30), y2:Y(30), stroke:'var(--bad)', 'stroke-width':2}, G);
+    const y = Y(mA);
+    el('path', {d:`M20 ${y} L60 ${y} M50 ${y - 8} L62 ${y} L50 ${y + 8}`, fill:'none', stroke:'var(--ink)', 'stroke-width':3}, G);
+    el('text', {x:16, y:y - 12, class:'svgt-b'}, G).textContent = mA < 0.1 ? '< 0,1 mA' : si(I, 'A');
+    $('bsR').textContent = si(R, 'Ω') + (U >= 100 ? ' (przebicie skóry)' : '');
+    $('bsI').textContent = si(I, 'A');
+    $('bsE').textContent = mA < 1 ? 'prawie nieodczuwalny' : mA < 10 ? 'mrowienie, ból' : mA < 30 ? 'skurcz mięśni' : mA < 75 ? 'zaburzenia oddychania' : 'zagrożenie życia!';
+  }
+  draw();
+})();
+
+/* ================== Oś czasu ================== */
+(function(){
+  const E = [
+    {y:'1752', n:'Benjamin Franklin', c:'USA', t:'Piorun to elektryczność', d:'Pokazał, że błyskawica to wyładowanie elektryczne, i wynalazł piorunochron. Jego doświadczenie z latawcem podczas burzy było śmiertelnie niebezpieczne: nigdy go nie powtarzaj!'},
+    {y:'1800', n:'Alessandro Volta', c:'Włochy', t:'Pierwsza bateria', d:'Zbudował stos z krążków cynku i miedzi przełożonych tkaniną nasączoną słoną wodą. Było to pierwsze źródło stałego prądu. Od jego nazwiska pochodzi jednostka napięcia: wolt.'},
+    {y:'1820', n:'Hans Christian Ørsted', c:'Dania', t:'Prąd i magnetyzm', d:'Zauważył, że igła kompasu odchyla się przy przewodzie z prądem. Odkrył magnetyczny skutek przepływu prądu. Zaraz potem André-Marie Ampère zbadał, jak oddziałują przewody z prądem.'},
+    {y:'1827', n:'Georg Simon Ohm', c:'Niemcy', t:'Prawo Ohma', d:'Opisał, jak natężenie prądu zależy od napięcia i oporu przewodnika. Od jego nazwiska pochodzi jednostka oporu: om.'},
+    {y:'1831', n:'Michael Faraday', c:'Anglia', t:'Prąd z magnesu', d:'Odkrył, że poruszający się magnes wytwarza prąd w przewodzie. To zjawisko indukcji elektromagnetycznej. Na tej zasadzie działają prądnice w elektrowniach.'},
+    {y:'1879', n:'Thomas Edison', c:'USA', t:'Trwała żarówka', d:'Zbudował żarówkę z żarzącym się włóknem, która świeciła przez wiele godzin, a potem jedną z pierwszych elektrowni zasilających domy.'},
+    {y:'1888', n:'Nikola Tesla', c:'USA', t:'Prąd przemienny', d:'Opatentował silnik prądu przemiennego. Dzięki prądowi przemiennemu energię elektryczną można przesyłać na duże odległości. Taki prąd płynie dziś w gniazdkach.'}];
+  const bar = $('tlBar'), card = $('tlCard'), clicked = new Set();
+  E.forEach((e, i) => { const b = document.createElement('button'); b.className = 'tl'; b.textContent = e.y; b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', ev => { if (ev.isTrusted) { clicked.add(i); S.tlClicks = clicked.size; } sel(i); }); bar.appendChild(b); });
+  function sel(i){
+    [...bar.children].forEach((b, k) => b.setAttribute('aria-pressed', k === i ? 'true' : 'false'));
+    bar.children[i].classList.add('seen');
+    const e = E[i];
+    card.innerHTML = `<p class="eyebrow" style="margin:0 0 6px">${e.y}</p><h3>${e.t}</h3><p class="who">${e.n} · ${e.c}</p><p style="margin:0">${e.d}</p>`;
+  }
+  S.tlSel = sel; S.tlE = E; sel(0);
+})();
+
+/* ================== symbole: śledzenie odkryć ================== */
+S.symUser = new Set();
+document.querySelectorAll('#symGrid details').forEach((d, i) => d.querySelector('summary').addEventListener('click', e => { if (e.isTrusted) S.symUser.add(i); }));
+
+/* ================== Quiz ================== */
+(function(){
+  const Q = [
+    {q:'Prąd elektryczny to…', o:['uporządkowany ruch ładunków elektrycznych', 'ruch atomów w przewodzie', 'ciepło płynące przewodem'], a:0, e:'Prąd to uporządkowany ruch ładunków, w metalach elektronów swobodnych.'},
+    {q:'Co płynie w metalowym przewodzie, gdy płynie prąd?', o:['protony', 'elektrony swobodne', 'jony dodatnie'], a:1, e:'W metalach poruszają się elektrony swobodne. Jony metalu stoją w miejscu.'},
+    {q:'Jednostką natężenia prądu jest…', o:['wolt (V)', 'amper (A)', 'om (Ω)'], a:1, e:'Natężenie mierzymy w amperach. 1 A = 1 C / 1 s.'},
+    {q:'Jednostką napięcia jest…', o:['wolt (V)', 'wat (W)', 'kulomb (C)'], a:0, e:'Napięcie mierzymy w woltach. 1 V = 1 J / 1 C.'},
+    {q:'Jak włączamy amperomierz?', o:['równolegle do odbiornika', 'szeregowo z odbiornikiem', 'dowolnie'], a:1, e:'Przez amperomierz musi płynąć cały prąd, więc włączamy go szeregowo.'},
+    {q:'Jak włączamy woltomierz?', o:['szeregowo', 'równolegle do odbiornika', 'zamiast odbiornika'], a:1, e:'Woltomierz mierzy napięcie między dwoma punktami, więc łączymy go równolegle.'},
+    {q:'Przez przekrój przewodu w ciągu 4 s przepłynął ładunek 2 C. Jakie było natężenie?', o:['0,5 A', '2 A', '8 A'], a:0, e:'I = q / t = 2 C : 4 s = 0,5 A.'},
+    {q:'250 mA to…', o:['25 A', '2,5 A', '0,25 A'], a:2, e:'Mili to tysięczna część: 250 : 1000 = 0,25 A.'},
+    {q:'Żarówka o oporze 6 Ω jest podłączona do napięcia 12 V. Jakie płynie natężenie?', o:['2 A', '0,5 A', '72 A'], a:0, e:'I = U / R = 12 V : 6 Ω = 2 A.'},
+    {q:'Napięcie na oporniku wzrosło 3 razy. Natężenie prądu…', o:['zmalało 3 razy', 'wzrosło 3 razy', 'nie zmieniło się'], a:1, e:'Prawo Ohma: natężenie jest wprost proporcjonalne do napięcia.'},
+    {q:'Który materiał jest izolatorem?', o:['miedź', 'grafit', 'guma'], a:2, e:'Guma nie ma swobodnych ładunków i nie przewodzi prądu.'},
+    {q:'W połączeniu szeregowym natężenie prądu…', o:['jest wszędzie takie samo', 'sumuje się', 'jest równe zeru'], a:0, e:'Prąd ma jedną drogę, więc w każdym miejscu jest takie samo.'},
+    {q:'Jak połączone są urządzenia w mieszkaniu?', o:['szeregowo', 'równolegle', 'wcale nie są połączone'], a:1, e:'Każde urządzenie dostaje 230 V i działa niezależnie od pozostałych.'},
+    {q:'Trzy ogniwa po 1,5 V połączone szeregowo dają napięcie…', o:['1,5 V', '3 V', '4,5 V'], a:2, e:'Napięcia ogniw połączonych szeregowo sumują się: 3 · 1,5 V = 4,5 V.'},
+    {q:'Czajnik pracuje przy napięciu 230 V i pobiera prąd 10 A. Jaka jest jego moc?', o:['23 W', '2300 W', '240 W'], a:1, e:'P = U · I = 230 V · 10 A = 2300 W.'},
+    {q:'Kilowatogodzina (kWh) to jednostka…', o:['energii', 'mocy', 'napięcia'], a:0, e:'1 kWh to energia zużyta przez urządzenie o mocy 1 kW w ciągu 1 h, czyli 3 600 000 J.'},
+    {q:'Opór przewodu wzrośnie, gdy przewód będzie…', o:['dłuższy', 'grubszy', 'krótszy'], a:0, e:'Opór rośnie z długością przewodu i maleje, gdy przewód jest grubszy.'},
+    {q:'Dlaczego ptak siedzący na linii wysokiego napięcia jest bezpieczny?', o:['bo między jego nogami nie ma napięcia', 'bo pióra przewodzą prąd', 'bo w liniach nie płynie prąd'], a:0, e:'Obie nogi są na tym samym przewodzie, więc napięcie między nimi jest równe zeru i prąd przez ptaka nie płynie.'}];
+  const box = $('quiz'); let score = 0;
+  function build(){
+    box.innerHTML = ''; score = 0; $('qScore').textContent = 'Wynik: 0 / ' + Q.length;
+    Q.forEach((it, i) => {
+      const d = document.createElement('div'); d.className = 'q';
+      d.innerHTML = `<p>${i + 1}. ${it.q}</p><div class="opts"></div><p class="expl" hidden></p>`;
+      const opts = d.querySelector('.opts'), ex = d.querySelector('.expl');
+      it.o.forEach((o, k) => {
+        const b = document.createElement('button'); b.className = 'opt'; b.textContent = o;
+        b.onclick = () => {
+          opts.querySelectorAll('.opt').forEach((x, j) => { x.disabled = true; if (j === it.a) x.classList.add('ok'); });
+          if (k === it.a) score++; else b.classList.add('no');
+          ex.textContent = (k === it.a ? 'Dobrze. ' : 'Niestety nie. ') + it.e; ex.hidden = false;
+          $('qScore').textContent = 'Wynik: ' + score + ' / ' + Q.length;
+        };
+        opts.appendChild(b);
+      });
+      box.appendChild(d);
+    });
+  }
+  build();
+  const reset = document.createElement('button'); reset.className = 'navbtn'; reset.textContent = 'Zacznij quiz od nowa'; reset.style.marginTop = '18px'; reset.onclick = build;
+  box.after(reset);
+})();
+
+/* ================== Trening ================== */
+(function(){
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const gens = [
+    () => { const I = pick([0.2, 0.5, 1, 2, 3, 4]), t = pick([2, 5, 10, 20, 30]), q = I*t;
+      return {q:`Przez przekrój przewodu w ciągu ${t} s przepłynął ładunek ${nv(q, 1)} C. Oblicz natężenie prądu.`, a:I, u:'A', hint:'I = q / t', sol:`I = ${nv(q, 1)} C : ${t} s = ${nv(I, 2)} A`}; },
+    () => { const I = pick([0.2, 0.5, 1.5, 2]), m = pick([1, 2, 5, 10]), q = I*m*60;
+      return {q:`Przez żarówkę płynie prąd ${nv(I, 1)} A. Jaki ładunek przepłynie w ciągu ${m} min?`, a:q, u:'C', hint:'q = I · t. Zamień minuty na sekundy!', sol:`q = ${nv(I, 1)} A · ${m*60} s = ${nv(q, 0)} C`}; },
+    () => { const U = pick([1.5, 3, 4.5, 6, 9, 12, 230]), R = pick([3, 5, 10, 15, 20, 30, 46]), I = U/R;
+      return {q:`Odbiornik o oporze ${R} Ω podłączono do napięcia ${nv(U, 1)} V. Oblicz natężenie prądu.`, a:I, u:'A', hint:'I = U / R', sol:`I = ${nv(U, 1)} V : ${R} Ω = ${nv(I, 3)} A`}; },
+    () => { const R = pick([4, 5, 8, 10, 20, 50]), I = pick([0.1, 0.2, 0.5, 1, 2]), U = R*I;
+      return {q:`Przy napięciu ${nv(U, 1)} V przez opornik płynie prąd ${nv(I, 1)} A. Oblicz opór opornika.`, a:R, u:'Ω', hint:'R = U / I', sol:`R = ${nv(U, 1)} V : ${nv(I, 1)} A = ${R} Ω`}; },
+    () => { const R = pick([5, 10, 20, 30, 100]), I = pick([0.1, 0.2, 0.3, 0.5]), U = R*I;
+      return {q:`Przez opornik ${R} Ω płynie prąd ${nv(I, 1)} A. Jakie jest napięcie na oporniku?`, a:U, u:'V', hint:'U = R · I', sol:`U = ${R} Ω · ${nv(I, 1)} A = ${nv(U, 1)} V`}; },
+    () => { const I = pick([0.5, 2, 5, 8, 10]), P = 230*I;
+      return {q:`Urządzenie zasilane napięciem 230 V pobiera prąd ${nv(I, 1)} A. Oblicz jego moc.`, a:P, u:'W', hint:'P = U · I', sol:`P = 230 V · ${nv(I, 1)} A = ${nv(P, 0)} W`}; },
+    () => { const P = pick([100, 500, 1000, 2000]), t = pick([0.5, 1, 2, 3, 5]), E = P*t/1000;
+      return {q:`Urządzenie o mocy ${P} W pracowało przez ${nv(t, 1)} h. Ile energii zużyło (w kWh)?`, a:E, u:'kWh', hint:'W = P · t. Zamień waty na kilowaty: 1000 W = 1 kW.', sol:`W = ${nv(P/1000, 1)} kW · ${nv(t, 1)} h = ${nv(E, 2)} kWh`}; },
+    () => { const m = pick([20, 50, 150, 250, 400, 750]);
+      return {q:`Zamień ${m} mA na ampery.`, a:m/1000, u:'A', hint:'1 mA = 0,001 A, więc dzielimy przez 1000.', sol:`${m} mA = ${m} : 1000 = ${nv(m/1000, 3)} A`}; },
+    () => { const R1 = pick([5, 10, 15, 20]), R2 = pick([10, 20, 30, 40]);
+      return {q:`Oporniki ${R1} Ω i ${R2} Ω połączono szeregowo. Oblicz opór zastępczy.`, a:R1 + R2, u:'Ω', hint:'W połączeniu szeregowym opory się sumują.', sol:`R = ${R1} Ω + ${R2} Ω = ${R1 + R2} Ω`}; },
+    () => { const I1 = pick([0.2, 0.5, 1, 1.5]), I2 = pick([0.3, 0.5, 1, 2]);
+      return {q:`Dwie żarówki połączono równolegle. Przez pierwszą płynie ${nv(I1, 1)} A, a przez drugą ${nv(I2, 1)} A. Jakie natężenie płynie ze źródła?`, a:I1 + I2, u:'A', hint:'W połączeniu równoległym natężenia gałęzi się sumują.', sol:`I = ${nv(I1, 1)} A + ${nv(I2, 1)} A = ${nv(I1 + I2, 1)} A`}; }];
+  let cur = null, tries = 0, streak = 0, best = 0, good = 0;
+  const inp = $('trIn'), msgEl = $('trMsg');
+  const stats = () => { $('trStreak').textContent = `Poprawne: ${good} · seria: ${streak} · najlepsza seria: ${best}`; S.trStreak = best; };
+  function next(){ cur = pick(gens)(); tries = 0; $('trQ').textContent = cur.q; $('trU').textContent = cur.u; inp.value = ''; msgEl.textContent = ''; msgEl.className = 'expl'; }
+  function check(){
+    const v = parseFloat(inp.value.replace(/\s/g, '').replace(',', '.'));
+    if (isNaN(v)) { msgEl.textContent = 'Wpisz liczbę, np. 0,5 albo 230.'; msgEl.className = 'expl no'; return; }
+    if (Math.abs(v - cur.a) <= Math.max(0.01*Math.abs(cur.a), 0.001)) {
+      good++; streak++; best = Math.max(best, streak);
+      msgEl.textContent = 'Dobrze! ' + cur.sol; msgEl.className = 'expl ok'; stats(); setTimeout(next, 2200);
+    } else {
+      tries++; streak = 0; stats();
+      msgEl.textContent = tries >= 2 ? 'Jeszcze nie. Rozwiązanie: ' + cur.sol + '. Kliknij „Nowe zadanie”.' : 'Jeszcze nie. Sprawdź jednostki i spróbuj ponownie albo kliknij „Podpowiedź”.';
+      msgEl.className = 'expl no';
+    }
+  }
+  $('trCheck').onclick = check;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+  $('trHint').onclick = () => { msgEl.textContent = 'Podpowiedź: ' + cur.hint; msgEl.className = 'expl'; };
+  $('trNew').onclick = next;
+  S.trCur = () => cur;
+  next(); stats();
+})();
+
+/* ================== Zadania krok po kroku ================== */
+(function(){
+  const T = [
+    {t:'W ciągu 10 s przez przekrój przewodu przepłynął ładunek 5 C. Oblicz natężenie prądu.', s:['<span class="given">Dane: q = 5 C, t = 10 s. Szukane: I</span>', 'Wzór: I = q / t', 'Podstawiamy: I = 5 C : 10 s', '<span class="ans">Odpowiedź: I = 0,5 A</span>']},
+    {t:'Żarówka o oporze 15 Ω jest podłączona do baterii 4,5 V. Jakie natężenie prądu przez nią płynie?', s:['<span class="given">Dane: R = 15 Ω, U = 4,5 V. Szukane: I</span>', 'Z prawa Ohma: I = U / R', 'Podstawiamy: I = 4,5 V : 15 Ω', '<span class="ans">Odpowiedź: I = 0,3 A = 300 mA</span>']},
+    {t:'Przy napięciu 12 V przez opornik płynie prąd 0,4 A. Oblicz opór opornika.', s:['<span class="given">Dane: U = 12 V, I = 0,4 A. Szukane: R</span>', 'Wzór: R = U / I', 'Podstawiamy: R = 12 V : 0,4 A', '<span class="ans">Odpowiedź: R = 30 Ω</span>']},
+    {t:'Dwa oporniki, 10 Ω i 20 Ω, połączono szeregowo i podłączono do napięcia 6 V. Oblicz natężenie prądu i napięcie na każdym oporniku.', s:['<span class="given">Dane: R₁ = 10 Ω, R₂ = 20 Ω, U = 6 V. Szukane: I, U₁, U₂</span>', 'Opór zastępczy: R = R₁ + R₂ = 30 Ω', 'Natężenie: I = U / R = 6 V : 30 Ω = 0,2 A', 'Napięcia: U₁ = R₁ · I = 10 Ω · 0,2 A = 2 V, U₂ = 20 Ω · 0,2 A = 4 V', '<span class="ans">Odpowiedź: I = 0,2 A, U₁ = 2 V, U₂ = 4 V. Sprawdzenie: 2 V + 4 V = 6 V</span>']},
+    {t:'Telewizor o mocy 100 W działa 5 godzin dziennie przez 30 dni. Ile energii zużyje i ile to będzie kosztować przy cenie 1 zł za 1 kWh?', s:['<span class="given">Dane: P = 100 W = 0,1 kW, t = 5 h · 30 = 150 h. Szukane: W, koszt</span>', 'Wzór: W = P · t', 'Podstawiamy: W = 0,1 kW · 150 h = 15 kWh', '<span class="ans">Odpowiedź: 15 kWh, czyli ok. 15 zł</span>']},
+    {t:'Czajnik zasilany napięciem 230 V ma moc 2000 W. Jakie natężenie prądu pobiera? Czy można go włączyć razem z suszarką 1800 W, jeśli bezpiecznik ma 16 A?', s:['<span class="given">Dane: U = 230 V, P = 2000 W. Szukane: I</span>', 'Z wzoru P = U · I wynika I = P / U', 'Czajnik: I = 2000 W : 230 V ≈ 8,7 A. Suszarka: 1800 W : 230 V ≈ 7,8 A', 'Razem: 8,7 A + 7,8 A ≈ 16,5 A, czyli więcej niż 16 A', '<span class="ans">Odpowiedź: czajnik pobiera ok. 8,7 A. Razem z suszarką przekroczą 16 A i bezpiecznik może się wyłączyć.</span>']}];
+  const box = $('tasks');
+  T.forEach((it, i) => {
+    const d = document.createElement('div'); d.className = 'q task';
+    d.innerHTML = `<p>Zadanie ${i + 1}. ${it.t}</p><ol>${it.s.map(s => `<li hidden>${s}</li>`).join('')}</ol><div class="row"><button class="opt nx">Pokaż następny krok</button><button class="opt all">Pokaż całe rozwiązanie</button></div>`;
+    const lis = [...d.querySelectorAll('li')], nx = d.querySelector('.nx'), al = d.querySelector('.all');
+    const upd = () => { const shown = lis.filter(l => !l.hidden).length; nx.disabled = shown === lis.length; al.textContent = shown === lis.length ? 'Ukryj rozwiązanie' : 'Pokaż całe rozwiązanie'; };
+    nx.onclick = () => { const l = lis.find(l => l.hidden); if (l) l.hidden = false; upd(); };
+    al.onclick = () => { const full = lis.every(l => !l.hidden); lis.forEach(l => l.hidden = full); upd(); };
+    box.appendChild(d);
+  });
+})();
+
+/* ================== Krzyżówka ================== */
+(function(){
+  const KW = [
+    ['BATERIA', 1, 'Kilka ogniw połączonych szeregowo.'],
+    ['AMPEROMIERZ', 1, 'Przyrząd do pomiaru natężenia prądu.'],
+    ['OPÓR', 1, 'Wielkość mierzona w omach. Mówi, jak bardzo przewodnik utrudnia przepływ prądu.'],
+    ['ELEKTRON', 0, 'Cząstka o ładunku ujemnym, która płynie w metalach.'],
+    ['PRZEWODNIK', 1, 'Materiał, który dobrze przewodzi prąd, np. miedź.']];
+  const C = 1, grid = $('kwGrid'), clues = $('kwClues'), msg = $('kwMsg');
+  const rows = KW.map(([w, key, clue], r) => {
+    const row = document.createElement('div'); row.className = 'kwrow';
+    row.innerHTML = `<span class="kwnum">${r + 1}.</span>` + '<span class="kwsp"></span>'.repeat(C - key);
+    const cells = [...w].map((ch, i) => { const inp = document.createElement('input'); inp.className = 'kwcell' + (i === key ? ' key' : ''); inp.maxLength = 2; inp.autocomplete = 'off'; inp.setAttribute('aria-label', `Hasło ${r + 1}, litera ${i + 1}`); row.appendChild(inp); return inp; });
+    grid.appendChild(row);
+    const li = document.createElement('li'); li.textContent = clue + ` (${w.length} liter)`; clues.appendChild(li);
+    return {w, cells};
+  });
+  const all = rows.flatMap(r => r.cells);
+  function win(){ msg.textContent = 'Brawo! Hasło to AMPER, jednostka natężenia prądu.'; msg.style.color = 'var(--good)'; S.kwDone = true; all.forEach(c => c.classList.add('ok')); }
+  all.forEach((inp, idx) => {
+    inp.addEventListener('input', () => {
+      const v = inp.value.slice(-1).toLocaleUpperCase('pl'); inp.value = v; inp.classList.remove('ok', 'no');
+      if (v && all[idx + 1]) all[idx + 1].focus();
+      if (rows.every(r => r.cells.every((c, i) => c.value === r.w[i]))) win();
+    });
+    inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && all[idx - 1]) { all[idx - 1].focus(); e.preventDefault(); } });
+  });
+  $('kwCheck').onclick = () => {
+    let bad = 0, empty = 0;
+    rows.forEach(r => r.cells.forEach((c, i) => { c.classList.remove('ok', 'no'); if (!c.value) empty++; else if (c.value === r.w[i]) c.classList.add('ok'); else { c.classList.add('no'); bad++; } }));
+    if (!bad && !empty) win(); else { msg.textContent = `Błędnych liter: ${bad}, pustych pól: ${empty}.`; msg.style.color = bad ? 'var(--bad)' : ''; }
+  };
+  $('kwShow').onclick = () => { rows.forEach(r => r.cells.forEach((c, i) => { c.value = r.w[i]; c.classList.remove('no'); c.classList.add('ok'); })); msg.textContent = 'Hasło: AMPER.'; msg.style.color = ''; };
+  $('kwClear').onclick = () => { all.forEach(c => { c.value = ''; c.classList.remove('ok', 'no'); }); msg.textContent = ''; };
+  S.kwType = (r, p) => { const R = rows[r]; R.cells.forEach((c, i) => { c.value = i < Math.ceil(p*R.w.length) ? R.w[i] : ''; }); };
+  S.kwClear = () => $('kwClear').click();
+})();
+
+/* ================== Słowniczek ================== */
+(function(){
+  const T = [
+    ['Prąd elektryczny', 'Uporządkowany ruch ładunków elektrycznych.'],
+    ['Ładunek elektryczny', 'Właściwość cząstek, np. elektronów i protonów. Mierzymy go w kulombach (C).'],
+    ['Elektron swobodny', 'Elektron w metalu, który nie jest związany z żadnym atomem i może się przemieszczać.'],
+    ['Kierunek umowny prądu', 'Od bieguna dodatniego do ujemnego w obwodzie zewnętrznym. Elektrony płyną odwrotnie.'],
+    ['Natężenie prądu', 'Ładunek przepływający przez przekrój przewodu w ciągu 1 s: I = q / t.'],
+    ['Amper (A)', 'Jednostka natężenia prądu. 1 A = 1 C / 1 s.'],
+    ['Napięcie elektryczne', 'Praca źródła przy przenoszeniu ładunku 1 C: U = W / q.'],
+    ['Wolt (V)', 'Jednostka napięcia. 1 V = 1 J / 1 C.'],
+    ['Opór elektryczny', 'Wielkość opisująca, jak przewodnik utrudnia przepływ prądu: R = U / I.'],
+    ['Om (Ω)', 'Jednostka oporu. 1 Ω = 1 V / 1 A.'],
+    ['Prawo Ohma', 'Natężenie prądu jest wprost proporcjonalne do napięcia (w stałej temperaturze).'],
+    ['Opór właściwy', 'Wielkość zależna od materiału. Mówi, jak dobrze materiał przewodzi prąd.'],
+    ['Przewodnik', 'Materiał, który dobrze przewodzi prąd, np. metale, grafit, roztwory soli.'],
+    ['Izolator', 'Materiał, który nie przewodzi prądu, np. plastik, guma, szkło.'],
+    ['Obwód elektryczny', 'Zamknięta droga dla prądu: źródło, przewody, odbiorniki i wyłącznik.'],
+    ['Schemat', 'Rysunek obwodu wykonany za pomocą umownych symboli.'],
+    ['Amperomierz', 'Przyrząd do pomiaru natężenia. Włączamy go szeregowo.'],
+    ['Woltomierz', 'Przyrząd do pomiaru napięcia. Włączamy go równolegle.'],
+    ['Ogniwo', 'Najprostsze źródło napięcia, np. bateria AA o napięciu 1,5 V.'],
+    ['Akumulator', 'Źródło napięcia, które można wielokrotnie ładować.'],
+    ['Połączenie szeregowe', 'Odbiorniki jeden za drugim. Natężenie wszędzie takie samo, napięcia się sumują.'],
+    ['Połączenie równoległe', 'Każdy odbiornik ma własną gałąź. Napięcie wszędzie takie samo, natężenia się sumują.'],
+    ['Moc', 'Praca wykonana w ciągu 1 s. Dla prądu: P = U · I. Jednostka: wat (W).'],
+    ['Kilowatogodzina (kWh)', 'Jednostka energii. 1 kWh = 3 600 000 J.'],
+    ['Bezpiecznik', 'Element, który przerywa obwód, gdy natężenie jest za duże.'],
+    ['Zwarcie', 'Połączenie przewodów z pominięciem odbiornika. Natężenie gwałtownie rośnie.'],
+    ['Wyłącznik różnicowoprądowy', 'Odcina prąd, gdy wykryje jego „ucieczkę”, np. przez ciało człowieka.'],
+    ['Elektroliza', 'Rozkład substancji w roztworze pod wpływem prądu.']];
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l');
+  const dl = $('gloss');
+  const items = T.map(([t, d]) => { const w = document.createElement('div'); w.innerHTML = `<dt>${t}</dt><dd>${d}</dd>`; w.dataset.k = norm(t + ' ' + d); dl.appendChild(w); return w; });
+  $('glQ').addEventListener('input', e => {
+    const q = norm(e.target.value.trim()); let n = 0;
+    items.forEach(w => { const ok = !q || w.dataset.k.includes(q); w.hidden = !ok; if (ok) n++; });
+    $('glNone').hidden = n > 0;
+  });
+})();
+
+/* ================== Gra: segregowanie ================== */
+(function(){
+  const items = [
+    ['Mierzy je woltomierz', 'u', 'woltomierz mierzy napięcie.'], ['Jednostka: wolt', 'u', 'napięcie mierzymy w woltach.'], ['Gniazdko w domu: 230 …', 'u', 'w gniazdku jest napięcie 230 V.'], ['Bateria AA: 1,5 …', 'u', 'ogniwo AA ma napięcie 1,5 V.'],
+    ['W połączeniu równoległym jest takie samo na każdym odbiorniku', 'u', 'w połączeniu równoległym napięcie jest wszędzie jednakowe.'], ['Praca źródła przy przenoszeniu ładunku 1 C', 'u', 'to definicja napięcia: U = W / q.'], ['W połączeniu szeregowym sumuje się na odbiornikach', 'u', 'U = U₁ + U₂.'],
+    ['Mierzy je amperomierz', 'i', 'amperomierz mierzy natężenie.'], ['Jednostka: amper', 'i', 'natężenie mierzymy w amperach.'], ['Bezpiecznik 16 …', 'i', 'bezpiecznik wyłącza się przy natężeniu powyżej 16 A.'], ['Dioda LED: 20 m…', 'i', 'dioda pobiera prąd ok. 20 mA.'],
+    ['W połączeniu szeregowym jest wszędzie takie samo', 'i', 'w obwodzie szeregowym natężenie jest jednakowe.'], ['Ładunek przepływający w ciągu 1 s', 'i', 'to definicja natężenia: I = q / t.'], ['Już ok. 30 m… przez ciało jest groźne', 'i', 'groźne jest natężenie ok. 30 mA.']];
+  const pool = $('sgPool'), bins = [...document.querySelectorAll('.bin')], msg = $('sgMsg');
+  let sel = null, mistakes = 0, done = 0, justDragged = false;
+  const score = () => { $('sgScore').textContent = done === items.length ? `Gotowe! Liczba błędów: ${mistakes}` : `Ułożone: ${done} / ${items.length} · błędy: ${mistakes}`; S.sortDone = done === items.length; };
+  const hit = (b, e) => { const r = b.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
+  function place(card, bin){
+    card.style.transform = ''; card.classList.remove('drag', 'sel'); sel = null;
+    if (card.dataset.k === bin.dataset.bin) { bin.querySelector('.binbody').appendChild(card); card.classList.add('ok'); card.disabled = true; done++; msg.textContent = 'Dobrze: ' + card.dataset.w; msg.style.color = 'var(--good)'; }
+    else { mistakes++; card.classList.remove('bad'); void card.offsetWidth; card.classList.add('bad'); msg.textContent = 'Nie tutaj. Zastanów się: czy chodzi o „siłę” źródła (napięcie), czy o ilość płynącego ładunku (natężenie)?'; msg.style.color = 'var(--bad)'; }
+    score();
+  }
+  function attach(c){
+    let sx = 0, sy = 0, moved = false, down = false;
+    c.addEventListener('pointerdown', e => { if (c.disabled) return; down = true; moved = false; sx = e.clientX; sy = e.clientY; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', e => { if (!down) return; const dx = e.clientX - sx, dy = e.clientY - sy; if (!moved && Math.hypot(dx, dy) > 6) { moved = true; c.classList.add('drag'); } if (moved) { c.style.transform = `translate(${dx}px,${dy}px)`; bins.forEach(b => b.classList.toggle('over', hit(b, e))); } });
+    c.addEventListener('pointerup', e => { if (!down) return; down = false; bins.forEach(b => b.classList.remove('over')); if (moved) { justDragged = true; setTimeout(() => justDragged = false, 50); const b = bins.find(b => hit(b, e)); if (b) place(c, b); else { c.style.transform = ''; c.classList.remove('drag'); } } });
+    c.addEventListener('pointercancel', () => { down = false; c.style.transform = ''; c.classList.remove('drag'); });
+    c.addEventListener('click', e => { e.stopPropagation(); if (justDragged || c.disabled) return; if (sel === c) { c.classList.remove('sel'); sel = null; return; } if (sel) sel.classList.remove('sel'); sel = c; c.classList.add('sel'); msg.textContent = 'Wybrano: „' + c.textContent + '”. Teraz kliknij pojemnik.'; msg.style.color = ''; });
+  }
+  function build(){
+    pool.innerHTML = ''; bins.forEach(b => b.querySelector('.binbody').innerHTML = ''); sel = null; mistakes = 0; done = 0; msg.textContent = '';
+    items.slice().sort(() => Math.random() - .5).forEach(([t, k, w]) => { const c = document.createElement('button'); c.className = 'card-s'; c.textContent = t; c.dataset.k = k; c.dataset.w = w; pool.appendChild(c); attach(c); });
+    score();
+  }
+  bins.forEach(b => { const go2 = () => { if (sel) place(sel, b); }; b.addEventListener('click', go2); b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go2(); } }); });
+  S.sgBuild = build;
+  $('sgReset').onclick = build; build();
+})();
+
+/* ================== Wyzwania ================== */
+const pressed = (sel, key, val) => { const b = document.querySelector(sel + ' [aria-pressed="true"]'); return !!b && b.dataset[key] === val; };
+const num = id => +$(id).value;
+const CH = {
+  'start': [['Ustaw napięcie 12 V i obserwuj dryf elektronów.', () => S.hero && S.hero.U === 12]],
+  'prad-co': [['Sprawdź, co płynie w roztworze soli.', () => S.pcMode === 'sol'], ['Pokaż kierunek umowny prądu.', () => !!S.pcDir]],
+  'przewodniki': [['Zbadaj wszystkie trzy rodzaje wody.', () => ['Woda z solą', 'Woda z kranu', 'Woda destylowana'].every(n => S.tsUser.has(n))]],
+  'obwod': [['Zaświeć żarówkę.', () => S.ob && S.ob.on], ['Przetnij przewód, gdy wyłącznik jest włączony.', () => S.ob && S.ob.cut && S.ob.closed]],
+  'symbole': [['Odkryj wszystkie 12 symboli.', () => S.symUser.size >= 12]],
+  'natezenie': [['Ustaw natężenie 2 A i licz ładunek przez co najmniej 5 s.', () => S.ni && S.ni.I === 2 && S.ni.t > 5]],
+  'amperomierz': [['Podłącz amperomierz źle i zobacz, co się stanie.', () => S.am && S.am.blown]],
+  'natezenia': [['Kliknij błyskawicę na wykresie.', () => S.niPickUser === 'Błyskawica']],
+  'jednostki': [['Wpisz własną wartość albo zmień jednostkę.', () => !!S.jnTyped]],
+  'napiecie': [['Uzyskaj natężenie większe niż 4 A.', () => S.na && S.na.I > 4]],
+  'zrodla': [['Zbuduj baterię 9 V.', () => S.zr && S.zr.U === 9], ['Ułóż ogniwa tak, żeby napięcia się zniosły.', () => S.zr && S.zr.U === 0 && S.zr.n > 1]],
+  'woltomierz': [['Zmierz napięcie baterii.', () => S.vmUser && S.vm && Math.abs(S.vm.V) === 9], ['Zmierz 0 V między dwoma różnymi punktami.', () => S.vmUser && S.vm && S.vm.same]],
+  'napiecia': [['Znajdź na wykresie napięcie w gniazdku.', () => S.nnPickUser === 'Gniazdko']],
+  'ohm': [['Uzyskaj natężenie dokładnie 0,3 A.', () => S.oh && Math.abs(S.oh.I - 0.3) < 1e-9]],
+  'charakterystyka': [['Zapisz co najmniej 5 pomiarów dla żarówki.', () => S.chUser && S.ch && S.ch.bulb >= 5]],
+  'opor': [['Uzyskaj opór przewodu większy niż 20 Ω.', () => S.op && S.op.R > 20]],
+  'szeregowe': [['Połącz 4 żarówki i wykręć jedną.', () => S.szUser && S.sz && S.sz.n === 4 && S.sz.anyRem]],
+  'rownolegle': [['Spraw, żeby ze źródła płynęły 4 A.', () => S.rw && S.rw.I === 4]],
+  'moc': [['Policz koszt pracy czajnika przez 1 h dziennie przez 30 dni.', () => S.mo && S.mo.dev === 'Czajnik' && Math.abs(S.mo.t - 1) < 0.05 && S.mo.days === 30]],
+  'skutki': [['Zobacz wszystkie 4 skutki przy włączonym prądzie.', () => S.skSeen.size >= 4]],
+  'bezpiecznik': [['Przeciąż instalację, aż wyłączy się bezpiecznik.', () => !!S.bzTrip['przeciążenie']], ['Wywołaj zwarcie.', () => !!S.bzTrip['zwarcie']]],
+  'bezpieczenstwo': [['Sprawdź, co grozi przy gniazdku i mokrych rękach.', () => S.bs && S.bs.U === 230 && S.bs.wet]],
+  'historia': [['Poznaj wszystkich odkrywców na osi czasu.', () => (S.tlClicks || 0) >= 7]],
+  'segreguj': [['Ułóż wszystkie karty.', () => !!S.sortDone]],
+  'zadania': [['Rozwiąż 3 losowe zadania z rzędu bez błędu.', () => (S.trStreak || 0) >= 3]],
+  'krzyzowka': [['Rozwiąż całą krzyżówkę.', () => !!S.kwDone]]
+};
+let chDone = 0, chTotal = 0;
+Object.entries(CH).forEach(([id, list]) => {
+  const host = document.querySelector(`.slide[data-id="${id}"] .lab`) || document.querySelector(`.slide[data-id="${id}"] .text`);
+  if (!host) return;
+  const box = document.createElement('div'); box.className = 'challenges'; box.innerHTML = '<h4>Wyzwania</h4>';
+  if (!host.classList.contains('lab')) box.style.marginTop = '18px';
+  const ul = document.createElement('ul');
+  list.forEach(c => { const li = document.createElement('li'); li.innerHTML = `<span class="mk" aria-hidden="true"></span><span class="ct">${c[0]}</span>`; c.li = li; c.done = false; ul.appendChild(li); chTotal++; });
+  box.appendChild(ul); host.appendChild(box);
+});
+const updCh = () => { $('chCount').textContent = `★ ${chDone}/${chTotal}`; };
+function checkCh(id){
+  const list = CH[id]; if (!list) return;
+  list.forEach(c => { if (c.done) return; let ok = false; try { ok = c[1](); } catch(e) {} if (ok) { c.done = true; c.li.classList.add('done'); chDone++; updCh(); } });
+}
+updCh();
+
+/* ================== Pokaz automatyczny ================== */
+const setVal = (id, v) => { const e = $(id); e.value = v; e.dispatchEvent(new Event('input', {bubbles:true})); };
+const chip = (sel, i) => () => { const b = document.querySelectorAll(sel + ' .chip')[i]; if (b) b.click(); };
+const openWhy = (sid, i) => document.querySelectorAll(`.slide[data-id="${sid}"] details.why`).forEach((d, k) => d.open = k === i);
+const rowOn = (sel, i) => document.querySelectorAll(sel).forEach((r, k) => r.classList.toggle('on', k === i));
+const setCheck = (id, v) => { const c = $(id); c.checked = v; c.dispatchEvent(new Event('change')); };
+const releaseHolds = () => {};
+const ease = p => p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2;
+const all = (...f) => () => f.forEach(x => x());
+const whySteps = (sid, d) => [...document.querySelectorAll(`.slide[data-id="${sid}"] details.why`)].map((x, i) => ({d, run:() => openWhy(sid, i), cap:(x.classList.contains('sym') ? '' : x.querySelector('summary').textContent + '. ') + [...x.querySelectorAll('p')].map(p => p.textContent).join(' ')}));
+const typeQ = (w, p) => { const q = $('glQ'); q.value = w.slice(0, Math.ceil(p*w.length)); q.dispatchEvent(new Event('input')); };
+const infoCap = id => { const e = $(id); return [...e.childNodes].map(n => n.textContent.trim()).filter(Boolean).join('. '); };
+const liSteps = (sel, d) => [...document.querySelectorAll(sel)].map((li, i) => ({d, run:() => rowOn(sel, i), cap:li.textContent}));
+
+const DEMOS = {
+  'start': {steps:[
+    {d:4, run:() => setVal('hU', 0), cap:'Bez napięcia elektrony swobodne poruszają się chaotycznie. Tyle samo leci w lewo, co w prawo, więc prąd nie płynie.'},
+    {d:3, tween:['hU', 0, 8], cap:'Podłączamy napięcie…'},
+    {d:6, cap:'Elektrony zaczynają dryfować w stronę bieguna dodatniego. To jest prąd elektryczny!'},
+    {d:3, tween:['hU', 8, 12], cap:'Większe napięcie: szybszy dryf i większy prąd.'},
+    {d:3},
+    {d:3, tween:['hU', 12, 0], cap:'Wyłączamy napięcie: znów tylko chaotyczny ruch.'}]},
+  'prad-co': {steps:[
+    {d:5, run:() => { chip('#pcMode', 0)(); setCheck('pcDir', false); }, cap:'W metalu płyną elektrony swobodne. Jony metalu stoją w miejscu.'},
+    {d:5, run:() => setCheck('pcDir', true), cap:'Kierunek umowny prądu jest odwrotny: od + do −. Elektrony płyną od − do +.'},
+    {d:6, run:chip('#pcMode', 1), cap:'W roztworze soli płyną jony: dodatnie do bieguna ujemnego, ujemne do dodatniego.'},
+    {d:2, run:() => setCheck('pcDir', false)}]},
+  'przewodniki': {steps:['Miedź: świetny przewodnik. Dlatego przewody robi się z miedzi.', 'Aluminium też dobrze przewodzi. Z aluminium robi się linie wysokiego napięcia.', 'Grafit z ołówka przewodzi, choć słabiej niż metale.', 'Woda z solą przewodzi, bo są w niej jony.', 'Woda z kranu przewodzi słabo. To jednak wystarczy, żeby była groźna przy 230 V!', 'Woda destylowana prawie nie przewodzi, bo nie ma w niej jonów.', 'Plastik to izolator. Dlatego przewody mają plastikową osłonę.', 'Guma to izolator.', 'Szkło to izolator.', 'Suche drewno to izolator. Mokre już przewodzi!'].map((c, i) => ({d:3.2, run:() => S.tsPick(i), cap:c}))},
+  'obwod': {steps:[
+    {d:3, run:() => { S.obSet(false, false, true); setCheck('obDir', false); }, cap:'Obwód otwarty: wyłącznik jest wyłączony, prąd nie płynie.'},
+    {d:5, run:() => S.obSet(true, false, true), cap:'Zamykamy wyłącznik: obwód jest zamknięty, elektrony płyną i żarówka świeci.'},
+    {d:4, run:() => setCheck('obDir', true), cap:'Strzałki pokazują kierunek umowny prądu: od + do −. Elektrony płyną odwrotnie.'},
+    {d:4, run:() => S.obSet(true, true, true), cap:'Przecinamy przewód: obwód jest otwarty i prąd przestaje płynąć wszędzie naraz.'},
+    {d:4, run:() => S.obSet(true, false, false), cap:'Bez żarówki obwód też jest przerwany.'},
+    {d:2, run:() => { S.obSet(false, false, true); setCheck('obDir', false); }}]},
+  'symbole': {steps:whySteps('symbole', 3.5)},
+  'natezenie': {steps:[
+    {d:6, run:() => setVal('niI', 1), cap:'Liczymy paczki ładunku przechodzące przez przekrój przewodu. Każda kropka to 0,5 C.'},
+    {d:5, cap:'Co sekundę przechodzą 2 paczki, czyli 1 C. Natężenie: I = q / t = 1 A.'},
+    {d:6, run:() => setVal('niI', 2), cap:'Dwa razy większe natężenie: w tym samym czasie przepływa dwa razy więcej ładunku.'},
+    {d:5, run:() => setVal('niI', 0.5), cap:'Natężenie 0,5 A: przez przekrój przepływa pół kulomba na sekundę.'},
+    {d:1, run:() => setVal('niI', 1)}]},
+  'amperomierz': {steps:[
+    {d:3, run:() => { S.amFix(); S.amSet('s', false); }, cap:'Amperomierz włączony szeregowo. Obwód jest jeszcze otwarty.'},
+    {d:5, run:() => S.amSet('s', true), cap:'Zamykamy obwód: cały prąd płynie przez amperomierz, który pokazuje 0,3 A.'},
+    {d:2, run:() => S.amSet('r', false), cap:'Teraz błąd: amperomierz równolegle do żarówki.'},
+    {d:5, run:() => S.amSet('r', true), cap:'Zwarcie! Prąd omija żarówkę i płynie przez amperomierz, który ma bardzo mały opór. Przepala się bezpiecznik w mierniku.'},
+    {d:3, run:() => { S.amFix(); S.amSet('s', false); }, cap:'Zapamiętaj: amperomierz zawsze szeregowo!'}]},
+  'natezenia': {steps:[0, 1, 2, 3, 4, 5, 6, 7].map(i => ({d:4, run:() => S.niSel(i), cap:() => infoCap('niInfo')}))},
+  'jednostki': {steps:[...liSteps('#jnList li', 3.5),
+    ...['Dioda LED: 20 mA to 0,02 A.', 'Zegarek: 2 µA to zaledwie 0,000 002 A.', 'Linia przesyłowa: 400 kV to 400 000 V.', 'Opornik: 4,7 kΩ to 4700 Ω.', 'Czajnik: 2 kW to 2000 W.'].map((c, i) => ({d:3.5, run:() => { rowOn('#jnList li', -1); chip('#jnPre', i)(); }, cap:c}))]},
+  'napiecie': {steps:[
+    {d:4, run:() => { setVal('naU', 6); setVal('naR', 6); }, cap:'Pompa podnosi wodę, a bateria „podnosi” ładunki. Napięcie jest jak różnica wysokości.'},
+    {d:5, tween:['naU', 6, 12], cap:'Większe napięcie, czyli wyżej podniesiona woda: płynie więcej i natężenie rośnie.'},
+    {d:4, tween:['naU', 12, 3], cap:'Małe napięcie: mały przepływ.'},
+    {d:2, run:() => setVal('naU', 6)},
+    {d:5, tween:['naR', 6, 18], cap:'Większy opór, czyli węższa rura: przy tym samym napięciu płynie mniej.'},
+    {d:3, tween:['naR', 18, 6]},
+    {d:3, tween:['naU', 6, 0], cap:'Bez napięcia nic nie płynie.'},
+    {d:2, tween:['naU', 0, 6]}]},
+  'zrodla': {steps:[
+    {d:4, run:() => S.zrSet([1]), cap:'Jedno ogniwo: 1,5 V. Żarówka 4,5 V ledwo świeci.'},
+    {d:3, run:() => S.zrSet([1, 1]), cap:'Dwa ogniwa szeregowo: 3 V.'},
+    {d:4, run:() => S.zrSet([1, 1, 1]), cap:'Trzy ogniwa: 4,5 V. Żarówka świeci normalnie. Tak zbudowana jest płaska bateria.'},
+    {d:4, run:() => S.zrSet([1, 1, -1]), cap:'Jedno ogniwo odwrócone: napięcia się odejmują i zostaje tylko 1,5 V.'},
+    {d:4, run:() => S.zrSet([1, 1, 1, 1, 1, 1]), cap:'Sześć ogniw to 9 V. Za dużo dla żarówki 4,5 V: przepala się!'},
+    {d:2, run:() => S.zrSet([1, 1, 1])}]},
+  'woltomierz': {steps:[['A', 'E', 'Między A i E: napięcie całej baterii, 9 V.'], ['A', 'B', 'Na oporniku R₁ (1 kΩ) są 3 V.'], ['B', 'D', 'Na oporniku R₂ (2 kΩ) jest 6 V. Większy opór, większe napięcie. Razem 3 V + 6 V = 9 V.'], ['B', 'C', 'Punkty B i C łączy sam przewód: 0 V. Jak ptak na jednym przewodzie.'], ['D', 'E', 'Punkty D i E też: 0 V.']].map(([r, b, c]) => ({d:5, run:() => S.vmSet(r, b), cap:c}))},
+  'napiecia': {steps:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => ({d:3.6, run:() => S.nnSel(i), cap:() => infoCap('nnInfo')}))},
+  'ohm': {steps:[
+    {d:3, run:() => { chip('#ohR', 1)(); setVal('ohU', 0); }, cap:'Opornik 20 Ω. Zwiększamy napięcie zasilacza…'},
+    {d:6, tween:['ohU', 0, 12], cap:'Natężenie rośnie proporcjonalnie do napięcia. Punkt wędruje po prostej.'},
+    {d:3, cap:'Przy 12 V płynie 0,6 A. U / I = 20 Ω, czyli tyle, ile wynosi opór opornika.'},
+    {d:4, run:chip('#ohR', 0), cap:'Mniejszy opór, 10 Ω: przy tym samym napięciu płynie dwa razy większy prąd.'},
+    {d:4, run:chip('#ohR', 2), cap:'Opór 40 Ω: prąd jest dwa razy mniejszy niż przy 20 Ω.'},
+    {d:2, run:() => { chip('#ohR', 1)(); setVal('ohU', 6); }}]},
+  'charakterystyka': {steps:[
+    {d:2, run:() => { S.chClear(); S.chPick(0); setVal('chU', 0); }, cap:'Mierzymy natężenie przy różnych napięciach dla opornika 20 Ω.'},
+    ...[2, 4, 6, 8, 10, 12].map(u => ({d:1.1, run:() => { setVal('chU', u); S.chSave(); }, cap:'Pomiar przy ' + u + ' V'})),
+    {d:3.5, cap:'Punkty układają się na prostej przechodzącej przez zero: to prawo Ohma.'},
+    {d:1, run:() => { S.chPick(2); setVal('chU', 0); }, cap:'Teraz żarówka.'},
+    ...[2, 4, 6, 8, 10, 12].map(u => ({d:1.1, run:() => { setVal('chU', u); S.chSave(); }, cap:'Pomiar żarówki przy ' + u + ' V'})),
+    {d:4, cap:'Wykres żarówki się wygina: rozgrzane włókno ma coraz większy opór.'}]},
+  'opor': {steps:[
+    {d:3, run:() => { S.opPick(1); setVal('opL', 1); setVal('opS', 1); }, cap:'Krótki, gruby przewód miedziany ma bardzo mały opór. Żarówka świeci jasno.'},
+    {d:5, tween:['opL', 1, 10], cap:'Wydłużamy przewód: opór rośnie, ale w miedzi wciąż jest mały.'},
+    {d:3, run:() => S.opPick(4), cap:'Zmieniamy materiał na nikielinę: opór rośnie ponad 20 razy i żarówka przygasa.'},
+    {d:4, tween:['opS', 1, 0.1], cap:'Cieńszy przewód: opór rośnie jeszcze bardziej. Tak robi się grzałki i oporniki.'},
+    {d:4, tween:['opS', 0.1, 2.5], cap:'Grubszy przewód: opór maleje.'},
+    {d:2, run:() => { S.opPick(1); setVal('opL', 2); setVal('opS', 1); }}]},
+  'szeregowe': {steps:[
+    {d:3, run:() => S.szSet(1), cap:'Jedna żarówka: całe napięcie 12 V, płynie 1 A, świeci jasno.'},
+    {d:4, run:() => S.szSet(2), cap:'Dwie żarówki szeregowo: napięcie dzieli się po 6 V, natężenie spada do 0,5 A. Obie świecą słabiej.'},
+    {d:4, run:() => S.szSet(4), cap:'Cztery żarówki: po 3 V na każdej, płynie tylko 0,25 A.'},
+    {d:4, run:() => S.szSet(4, [false, true, false, false]), cap:'Wykręcamy jedną żarówkę: obwód jest przerwany i gasną wszystkie!'},
+    {d:2, run:() => S.szSet(2)}]},
+  'rownolegle': {steps:[
+    {d:3, run:() => S.rwSet(1), cap:'Jedna żarówka: 12 V, płynie 1 A.'},
+    {d:4, run:() => S.rwSet(2), cap:'Dwie równolegle: każda ma pełne 12 V i świeci tak samo jasno. Ze źródła płyną 2 A.'},
+    {d:4, run:() => S.rwSet(4), cap:'Cztery żarówki: każda dalej świeci jasno, a ze źródła płyną 4 A.'},
+    {d:4, run:() => S.rwSet(4, [false, true, false, false]), cap:'Wykręcamy jedną: pozostałe świecą dalej, a natężenie spada do 3 A.'},
+    {d:2, run:() => S.rwSet(2)}]},
+  'polaczenia': {steps:[...document.querySelectorAll('.slide[data-id="polaczenia"] tbody tr')].map((r, i) => ({d:4.5, run:() => rowOn('.slide[data-id="polaczenia"] tbody tr', i), cap:r.cells[0].textContent + ': szeregowo ' + r.cells[1].textContent + '; równolegle ' + r.cells[2].textContent + '.'}))},
+  'moc': {steps:[
+    {d:4, run:() => { S.moPick(4); setVal('moT', 1); setVal('moD', 30); }, cap:'Czajnik 2000 W używany godzinę dziennie przez miesiąc zużywa 60 kWh, czyli ok. 60 zł.'},
+    {d:4, run:() => S.moPick(0), cap:'Żarówka LED 8 W przez godzinę dziennie: tylko 0,24 kWh w miesiącu.'},
+    {d:5, tween:['moT', 1, 8], cap:'Nawet 8 godzin dziennie to niecałe 2 kWh miesięcznie. Żarówki LED są bardzo oszczędne.'},
+    {d:4, run:() => { S.moPick(5); setVal('moT', 1); }, cap:'Piekarnik 3000 W: duża moc, duże natężenie (ok. 13 A) i duże zużycie energii.'},
+    {d:2, run:() => S.moPick(4)}]},
+  'skutki': {steps:[0, 1, 2, 3].flatMap(k => [{d:1, run:() => S.skSet(k, false), cap:'Wyłączamy prąd i przygotowujemy kolejne doświadczenie.'}, {d:5, run:() => S.skSet(k, true), cap:['Skutek cieplny: grzałka się nagrzewa i rośnie temperatura.', 'Skutek świetlny: żarówka świeci.', 'Skutek magnetyczny: igła kompasu odchyla się, gdy płynie prąd. To doświadczenie Ørsteda.', 'Skutek chemiczny: na elektrodach wydzielają się pęcherzyki gazów.'][k]}])},
+  'bezpiecznik': {steps:[
+    {d:3, run:() => { S.bzReset(); S.bzSet([4, 5]); }, cap:'Telewizor i laptop: razem niecały 1 A. Wszystko w normie.'},
+    {d:3, run:() => S.bzSet([4, 5, 0]), cap:'Włączamy czajnik: ok. 9,6 A.'},
+    {d:3, run:() => S.bzSet([4, 5, 0, 1]), cap:'I suszarkę: już ponad 17 A. Przewody zaczynają się grzać…'},
+    {d:4, run:() => S.bzSet([4, 5, 0, 1, 2]), cap:'Do tego żelazko: ponad 27 A! Bezpiecznik wyłącza prąd, żeby nie doszło do pożaru.'},
+    {d:3, run:() => { S.bzReset(); S.bzSet([4, 5]); }, cap:'Wyłączamy część urządzeń i włączamy bezpiecznik ponownie.'},
+    {d:4, run:() => S.bzShort(), cap:'Zwarcie: opór prawie zerowy, natężenie ogromne. Bezpiecznik wyłącza się prawie natychmiast.'},
+    {d:2, run:() => S.bzReset()}]},
+  'bezpieczenstwo': {steps:[
+    {d:4, run:() => { rowOn('#bsList li', -1); S.bsSet(4.5, 100000); }, cap:'Bateria 4,5 V i sucha skóra: przez ciało płynie tylko ok. 0,05 mA. Nic nie czujemy.'},
+    {d:4, run:() => S.bsSet(4.5, 1000), cap:'Mokra skóra ma znacznie mniejszy opór: 4,5 mA, czuć mrowienie.'},
+    {d:4, run:() => S.bsSet(12, 1000), cap:'Akumulator 12 V i mokre ręce: 12 mA, skurcz mięśni.'},
+    {d:5, run:() => S.bsSet(230, 1000), cap:'Gniazdko 230 V: ok. 230 mA. To śmiertelnie niebezpieczne!'},
+    {d:5, run:() => S.bsSet(230, 100000), cap:'Nawet przy suchej skórze wysokie napięcie przebija skórę. Gniazdko zawsze jest groźne.'},
+    ...liSteps('#bsList li', 3.5),
+    {d:1, run:() => { rowOn('#bsList li', -1); S.bsSet(4.5, 100000); }}]},
+  'historia': {steps:S.tlE.map((e, i) => ({d:7, run:() => S.tlSel(i), cap:e.y + ': ' + e.t + '. ' + e.n + '.'}))},
+  'przyroda': {steps:whySteps('przyroda', 6)},
+  'porownanie': {steps:[...document.querySelectorAll('.slide[data-id="porownanie"] tbody tr')].map((r, i) => ({d:4, run:() => rowOn('.slide[data-id="porownanie"] tbody tr', i), cap:r.cells[0].textContent + ': ' + [...r.cells].slice(1).map(c => c.textContent).join(' | ')}))},
+  'segreguj': {loop:false, end:'Teraz Twoja kolej! Przeciągnij karty do pojemników.', steps:[
+    {d:4, run:() => S.sgBuild(), cap:'Gra: każdą kartę trzeba wrzucić do pojemnika „napięcie” albo „natężenie”.'},
+    {d:3, run:() => { const c = [...document.querySelectorAll('#sgPool .card-s')].find(c => c.dataset.k === 'i'); if (c) c.click(); }, cap:'Na przykład klikamy kartę…'},
+    {d:3, run:() => document.querySelector('.bin[data-bin="i"]').click(), cap:'…i właściwy pojemnik. Zielona karta oznacza dobrą odpowiedź.'},
+    {d:1, run:() => S.sgBuild()}]},
+  'domowe': {steps:whySteps('domowe', 8)},
+  'bledy': {steps:whySteps('bledy', 6)},
+  'zadania': {loop:false, end:'Teraz Ty: wpisz wynik w treningu albo odsłaniaj kroki zadań.', steps:[
+    {d:3, run:() => $('trNew').click(), cap:'Trening: komputer losuje zadanie.'},
+    {d:3, anim:p => { const s = nv(S.trCur().a, 3); $('trIn').value = s.slice(0, Math.ceil(p*s.length)); }, cap:'Liczymy i wpisujemy wynik…'},
+    {d:3, run:() => $('trCheck').click(), cap:'…i klikamy „Sprawdź”.'},
+    ...[0, 1, 2, 3].map(k => ({d:2.5, run:() => { const b = document.querySelector('#tasks .task .nx'); if (b && !b.disabled) b.click(); }, cap:['Zadania z rozwiązaniem: najpierw zapisujemy dane.', 'Potem wzór.', 'Podstawiamy liczby.', 'I mamy odpowiedź.'][k]})),
+    {d:1, run:() => { const b = document.querySelector('#tasks .task .all'); if (b && b.textContent.startsWith('Ukryj')) b.click(); }}]},
+  'krzyzowka': {loop:false, end:'Teraz Ty: wpisz odpowiedzi w kratki. Litery w niebieskiej kolumnie utworzą hasło.', steps:[
+    {d:3, run:() => S.kwClear(), cap:'Krzyżówka: każda odpowiedź to pojęcie z prezentacji.'},
+    {d:3, anim:p => S.kwType(0, p), cap:'Na przykład hasło 1: kilka ogniw połączonych szeregowo to BATERIA.'},
+    {d:3, cap:'Litera w niebieskiej kolumnie, A, to pierwsza litera hasła.'},
+    {d:1, run:() => S.kwClear()}]},
+  'podsumowanie': {steps:[...document.querySelectorAll('.slide[data-id="podsumowanie"] .card')].map((c, i) => ({d:4, run:() => rowOn('.slide[data-id="podsumowanie"] .card', i), cap:c.querySelector('h3').textContent + ': ' + c.querySelector('.formula').textContent + '. ' + c.querySelector('p').textContent}))},
+  'slowniczek': {steps:[
+    {d:3, cap:'Słowniczek zawiera wszystkie pojęcia z prezentacji.'},
+    {d:2.5, anim:p => typeQ('amper', p), cap:'Wpisz szukane słowo, np. „amper”…'},
+    {d:3, cap:'…a słowniczek pokaże pasujące pojęcia.'},
+    {d:2.5, anim:p => typeQ('opór', p), cap:'Teraz szukamy słowa „opór”.'},
+    {d:3},
+    {d:1, run:() => typeQ('', 1)}]}
+};
+
+let demoOn = true, demo = null;
+const demoBoxes = {};
+Object.keys(DEMOS).forEach(id => {
+  const sl = document.querySelector(`.slide[data-id="${id}"]`); if (!sl) return;
+  const box = document.createElement('div'); box.className = 'demo'; box.setAttribute('aria-live', 'polite');
+  box.innerHTML = '<span class="demo-dot" aria-hidden="true"></span><span class="demo-cap"></span><button class="chip demo-btn"></button>';
+  const lab = sl.querySelector('.lab');
+  if (lab) lab.prepend(box); else sl.querySelector('h2').after(box);
+  box.querySelector('.demo-btn').onclick = () => { if (demo && demo.active && demo.id === id) demoStop(); else demoStart(id, true); };
+  demoBoxes[id] = box;
+});
+function setCap(id, text, active){
+  const b = demoBoxes[id]; if (!b) return;
+  if (text != null) b.querySelector('.demo-cap').textContent = text;
+  b.classList.toggle('on', !!active);
+  b.querySelector('.demo-btn').textContent = active ? 'Zatrzymaj pokaz' : 'Powtórz pokaz';
+}
+const clearHL = () => { ['.slide[data-id="polaczenia"] tbody tr', '.slide[data-id="porownanie"] tbody tr', '.slide[data-id="podsumowanie"] .card', '#jnList li', '#bsList li'].forEach(s => rowOn(s, -1)); };
+function demoStart(id, force){
+  if (!DEMOS[id] || (!demoOn && !force)) { demo = null; setCap(id, 'Kliknij „Powtórz pokaz”, aby zobaczyć automatyczny pokaz.', false); return; }
+  demo = {id, D:DEMOS[id], i:0, t:0, started:false, active:true};
+  setCap(id, '', true);
+}
+function demoStop(msg){
+  if (!demo) return;
+  demo.active = false; clearHL();
+  setCap(demo.id, msg || 'Pokaz zatrzymany. Teraz Ty! Kliknij „Powtórz pokaz”, aby obejrzeć go jeszcze raz.', false);
+}
+function demoTick(dt){
+  if (!demo || !demo.active) return;
+  const st = demo.D.steps[demo.i];
+  if (!demo.started) {
+    demo.started = true; demo.t = 0;
+    try { st.run && st.run(); } catch(e) { console.error(e); }
+    const c = typeof st.cap === 'function' ? st.cap() : st.cap;
+    if (c) setCap(demo.id, c, true);
+  }
+  demo.t += dt;
+  const p = Math.min(1, demo.t/st.d);
+  try { if (st.tween) { const [id, a, b] = st.tween; setVal(id, a + (b - a)*ease(p)); } if (st.anim) st.anim(ease(p)); } catch(e) { console.error(e); }
+  if (p >= 1) {
+    demo.i++; demo.started = false;
+    if (demo.i >= demo.D.steps.length) {
+      if (demo.D.loop === false) { demo.active = false; setCap(demo.id, demo.D.end || 'Teraz Twoja kolej!', false); }
+      else demo.i = 0;
+    }
+  }
+}
+let userTouched = false;
+['pointerdown', 'keydown', 'input'].forEach(t => document.addEventListener(t, e => {
+  if (!e.isTrusted) return;
+  if (slides[cur].contains(e.target) && !e.target.closest('.demo')) userTouched = true;
+  if (t === 'input' || !demo || !demo.active) return;
+  if (t === 'keydown' && ['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(e.key) && e.target.tagName !== 'INPUT') return;
+  if (slides[cur].contains(e.target) && !e.target.closest('.demo')) demoStop();
+}, true));
+const demoBtn = $('demoBtn');
+demoBtn.onclick = () => {
+  demoOn = !demoOn;
+  demoBtn.textContent = 'Pokaz automatyczny: ' + (demoOn ? 'wł.' : 'wył.'); demoBtn.setAttribute('aria-pressed', demoOn);
+  if (demoOn) demoStart(ids[cur]); else demoStop('Pokaz automatyczny wyłączony. Kliknij „Powtórz pokaz”, aby go obejrzeć.');
+};
+onSlideChange = i => { userTouched = false; if (demo && demo.active) demoStop(); releaseHolds(); demoStart(ids[i]); };
+onSlideChange(cur);
+
+/* ================== Pętla animacji ================== */
+const playBtn = $('playBtn');
+const setPlay = v => { playing = v; playBtn.textContent = v ? 'Zatrzymaj symulacje' : 'Wznów symulacje'; playBtn.setAttribute('aria-pressed', v ? 'false' : 'true'); };
+playBtn.onclick = () => setPlay(!playing);
+setPlay(playing);
+let last = performance.now(), colT = 0;
+function loop(now){
+  const dt = Math.min(0.033, (now - last)/1000); last = now;
+  colT += dt; if (colT > 0.5) { colT = 0; refreshColors(); }
+  if (playing) demoTick(dt);
+  const f = sims[ids[cur]];
+  if (f) { try { f(playing ? dt : 0, !playing); } catch(e) { console.error(e); } }
+  if (userTouched && !(demo && demo.active)) checkCh(ids[cur]);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

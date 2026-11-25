@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Napięcie i natężenie prądu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Układ: talia slajdów, tekst po lewej + żywy eksperyment po prawej; na telefonie jedna kolumna */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --bg:#EDF0F6; --surface:#FFFFFF; --ink:#101B33; --muted:#56607A; --line:#CAD2E1;
+  --pri:#2E5BD8; --pri-soft:rgba(46,91,216,.13); --acc:#D9951A; --glow:#FFD35A; --cu:#B8693F;
+  --el:#2E5BD8; --ion:#C9473A; --good:#24865A; --bad:#C23B2C; --glass:#8592AA; --alt:#7B5BD0;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B1020; --surface:#141B2F; --ink:#E5EAF5; --muted:#98A3BC; --line:#2A3450;
+  --pri:#6E95FF; --pri-soft:rgba(110,149,255,.18); --acc:#F2B940; --glow:#FFD96A; --cu:#D88A5E;
+  --el:#7FA2FF; --ion:#F07A6B; --good:#5CC48C; --bad:#F0705F; --glass:#7484A3; --alt:#A98BF0; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0B1020; --surface:#141B2F; --ink:#E5EAF5; --muted:#98A3BC; --line:#2A3450;
+  --pri:#6E95FF; --pri-soft:rgba(110,149,255,.18); --acc:#F2B940; --glow:#FFD96A; --cu:#D88A5E;
+  --el:#7FA2FF; --ion:#F07A6B; --good:#5CC48C; --bad:#F0705F; --glass:#7484A3; --alt:#A98BF0; color-scheme:dark }
+
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.deck{display:flex;flex-direction:column;height:100%;max-width:1240px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:15px}
+.brand span{color:var(--muted);font-weight:500}
+.topr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.counter{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chbadge{font:600 13px var(--f-mono);color:var(--good);font-variant-numeric:tabular-nums}
+.progress{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:-1px}
+.progress i{display:block;height:100%;background:var(--pri);width:0;transition:width .35s ease}
+main{flex:1;overflow-y:auto;padding-block:28px 24px}
+.slide{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:40px;align-items:start;animation:in .35s ease}
+.slide.single{grid-template-columns:minmax(0,1fr)}
+@keyframes in{from{transform:translateY(6px)}to{transform:none}}
+.text{min-width:0;max-width:62ch}
+.single .text{max-width:none}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:0 0 10px}
+h1,h2{font-family:var(--f-display);text-wrap:balance;margin:0 0 16px;line-height:1.08}
+h1{font-size:clamp(36px,6vw,70px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(28px,3.6vw,42px);font-weight:700;letter-spacing:-.01em}
+h3{font-family:var(--f-display);font-size:18px;margin:0 0 6px}
+p{margin:0 0 14px}
+.lead{font-size:19px;color:var(--muted);max-width:54ch}
+.formula{font-family:var(--f-mono);font-size:20px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:inline-block;margin:4px 0 16px}
+.formula b{color:var(--pri);font-weight:500}
+.legend{font-size:15px;color:var(--muted);margin:0 0 14px;padding-left:20px}
+.legend li{margin-bottom:3px;padding:2px 6px}
+.legend li.on,.derive li.on{background:var(--pri-soft);border-radius:6px}
+.legend b{color:var(--ink)}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--acc);padding:2px 0 2px 12px}
+.def{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:8px;padding:12px 16px;margin:0 0 16px;font-size:17px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 20px;margin:0 0 14px}
+.facts h4{font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 4px}
+.facts ul{margin:0;padding-left:18px;font-size:15px}
+.lab{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.lab svg{width:100%;height:auto;max-height:52vh;display:block}
+canvas.sim{width:100%;height:auto;display:block;max-width:100%}
+.live{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--good)}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.controls{display:grid;gap:12px}
+.ctl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
+.ctl label{font-size:14px;font-weight:600}
+.ctl output{font-family:var(--f-mono);font-size:14px;justify-self:end;font-variant-numeric:tabular-nums}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--pri)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--f-body);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--pri)}
+.chip[aria-pressed="true"]{background:var(--pri);border-color:var(--pri);color:var(--surface)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.readout > div{border-top:2px solid var(--line);padding-top:6px}
+.readout .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.readout .v{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums}
+.readout .hl{border-top-color:var(--pri)}
+.readout .hl .v{color:var(--pri)}
+.vt{font-family:var(--f-body)!important;font-size:16px!important}
+.calc{font-family:var(--f-mono);font-size:13.5px;line-height:1.7;background:var(--bg);border-radius:8px;padding:10px 12px;margin:0;overflow-x:auto;white-space:nowrap}
+.calc .lbl{display:block;font-family:var(--f-body);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.calc b{color:var(--pri);font-weight:500}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.navbtn{font:600 15px var(--f-body);padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-width:110px}
+.navbtn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.navbtn:disabled{opacity:.35;cursor:default}
+.navbtn.held{background:var(--pri);border-color:var(--pri);color:var(--surface)}
+.holdbtn{touch-action:none;user-select:none;-webkit-user-select:none}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600}
+.check input{accent-color:var(--pri);width:18px;height:18px}
+.inp{font:500 16px var(--f-mono);padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
+input.inp{width:170px}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 16px;border-top:1px solid var(--line)}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer}
+.dots button[aria-current="true"]{background:var(--pri);transform:scale(1.3)}
+.hint{font-size:12px;color:var(--muted);text-align:center}
+.toc{list-style:none;padding:0;margin:20px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 20px}
+.toc button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line);width:100%}
+.toc button:hover .t{color:var(--pri)}
+.toc button:focus-visible{outline:2px solid var(--acc)}
+.toc .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.toc li.part{grid-column:1/-1;font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-top:12px}
+.demo{display:flex;align-items:center;gap:10px;background:var(--pri-soft);border:1px solid var(--pri);border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.4;min-height:50px}
+.demo-cap{flex:1;min-width:0}
+.demo-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.demo.on .demo-dot{background:var(--pri);animation:pulse 1.2s infinite}
+.demo-btn{flex:none}
+.text > .demo{margin:0 0 16px}
+.challenges{border-top:1px solid var(--line);padding-top:12px}
+.challenges h4{font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--acc);margin:0 0 8px}
+.challenges ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.challenges li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.mk{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:1px;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--surface)}
+.challenges li.done .mk{background:var(--good);border-color:var(--good)}
+.challenges li.done .mk::after{content:"✓"}
+.challenges li.done .ct{color:var(--muted);text-decoration:line-through}
+.challenges li.done{animation:pop .5s ease}
+@keyframes pop{30%{transform:scale(1.04)}}
+.whys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:6px}
+details.why{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+details.why summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::after{content:"Dlaczego?";font-size:12px;font-weight:600;color:var(--pri);white-space:nowrap}
+details.why[open] summary::after{content:"Zwiń"}
+details.why[open]{border-color:var(--pri)}
+details.why p{margin:8px 0 0;font-size:14px;color:var(--muted)}
+details.why.err summary{color:var(--bad)}
+details.why.err summary::after{content:"Jak dobrze?"}
+details.why.err[open] summary::after{content:"Zwiń"}
+details.why.err p{color:var(--good)}
+details.why.sym summary{flex-direction:column;align-items:center;gap:6px}
+details.why.sym summary::after{content:"Co to za symbol?"}
+details.why.sym summary svg{width:120px;height:56px}
+details.why.sym p{text-align:center}
+details.why.info summary::after{content:"Więcej"}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table.cmp{width:100%;border-collapse:collapse;font-size:15px;min-width:620px}
+table.cmp th,table.cmp td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.cmp tr:last-child td,table.cmp tr:last-child th{border-bottom:0}
+table.cmp thead th{font-family:var(--f-display);font-size:16px;background:var(--bg)}
+table.cmp tbody th{font-weight:600;color:var(--muted);font-size:14px;width:24%}
+table.cmp code{font-family:var(--f-mono);color:var(--pri)}
+table.cmp tr.on th,table.cmp tr.on td{background:var(--pri-soft)}
+.quiz{display:grid;gap:18px;max-width:860px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.q > p:first-child{font-weight:600;margin-bottom:10px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:500 14px var(--f-body);padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--good);color:var(--good);font-weight:600}
+.opt.no{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.expl{font-size:14px;color:var(--muted);margin:10px 0 0}
+.expl.ok{color:var(--good);font-weight:600}
+.expl.no{color:var(--bad)}
+.score{font-family:var(--f-display);font-size:22px;font-weight:700}
+.task ol{margin:10px 0 0;padding-left:22px;display:grid;gap:6px}
+.task li{font-size:15px}
+.task .given{font-family:var(--f-mono);font-size:14px}
+.task .ans{font-weight:600;color:var(--pri)}
+.task .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.trainer{border-color:var(--pri)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .formula{font-size:17px;margin:6px 0 8px;display:block;background:var(--bg)}
+.card p{font-size:14px;color:var(--muted);margin:0}
+.card.on{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri)}
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;margin:14px 0;padding:10px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.card-s{font:500 14px var(--f-body);padding:9px 13px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}
+.card-s.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.card-s.drag{position:relative;z-index:50;cursor:grabbing;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card-s.ok{border-color:var(--good);color:var(--good);cursor:default;background:var(--surface)}
+.card-s.bad{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.bin{border:2px dashed var(--line);border-radius:12px;padding:14px;min-height:150px;background:var(--surface);cursor:pointer}
+.bin.over{border-color:var(--pri);background:var(--pri-soft)}
+.binbody{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sortbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.timeline{display:flex;justify-content:space-between;position:relative;margin:24px 0 18px;gap:4px;max-width:860px}
+.timeline::before{content:"";position:absolute;left:0;right:0;top:15px;height:2px;background:var(--line)}
+.tl{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;cursor:pointer;color:var(--ink);font:600 14px var(--f-mono);padding:0}
+.tl::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--pri);margin-top:6px;transition:transform .2s}
+.tl.seen::before{background:var(--pri-soft)}
+.tl[aria-pressed="true"]::before{background:var(--pri);transform:scale(1.35)}
+.tl[aria-pressed="true"]{color:var(--pri)}
+.tlcard{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:18px 20px;max-width:860px}
+.tlcard h3{font-size:22px}
+.tlcard .who{color:var(--muted);font-size:14px;margin:0 0 8px}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:16px 0 0}
+.gloss div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.gloss dt{font-family:var(--f-display);font-weight:700;font-size:17px}
+.gloss dd{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.kw{overflow-x:auto;padding-bottom:6px}
+.kwrow{display:flex;align-items:center;margin-bottom:4px}
+.kwnum{width:26px;flex:none;font:500 13px var(--f-mono);color:var(--muted)}
+.kwsp{width:32px;height:36px;flex:none}
+.kwcell{width:32px;height:36px;flex:none;text-align:center;font:600 17px var(--f-mono);border:1px solid var(--line);margin-left:-1px;background:var(--surface);color:var(--ink);text-transform:uppercase;padding:0;border-radius:0}
+.kwcell:focus{outline:2px solid var(--acc);position:relative;z-index:1}
+.kwcell.key{background:var(--pri-soft);border-color:var(--pri)}
+.kwcell.ok{color:var(--good)}
+.kwcell.no{color:var(--bad)}
+.kwclues{font-size:15px;padding-left:22px;display:grid;gap:4px;margin:14px 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.flow{stroke-dasharray:7 6;animation:flowa .5s linear infinite}
+@keyframes flowa{to{stroke-dashoffset:-13}}
+/* SVG */
+.wire{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.glass{fill:none;stroke:var(--glass);stroke-width:3;stroke-linejoin:round}
+.tick{stroke:var(--muted);stroke-width:1}
+.grid{stroke:var(--line);stroke-width:1}
+.svgt{fill:var(--muted);font:12px var(--f-mono)}
+.svgt-b{fill:var(--ink);font:600 13px var(--f-body)}
+.svgt-big{fill:var(--ink);font:500 15px var(--f-mono)}
+.arrow{stroke:var(--acc);stroke-width:2.5;fill:none;stroke-linecap:round}
+.arrowhead{fill:var(--acc)}
+.dash{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.eldot{fill:var(--el)}
+.qdot{fill:var(--acc)}
+.comp{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.clk{cursor:pointer}
+@media (prefers-reduced-motion: reduce){.slide{animation:none}.live::before,.demo.on .demo-dot{animation:none}.flow{animation:none}.card-s.bad,.challenges li.done{animation:none}}
+@media (max-width:860px){
+  .slide{grid-template-columns:minmax(0,1fr);gap:22px}
+  .lab svg{max-height:none}
+  .navbtn{min-width:0;padding:10px 14px}
+  .hint,.brand span{display:none}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <header class="top">
+    <div class="brand">Prąd elektryczny <span>· napięcie i natężenie</span></div>
+    <div class="topr">
+      <span class="chbadge" id="chCount" title="Wykonane wyzwania na wszystkich slajdach"></span>
+      <button class="chip" id="demoBtn" aria-pressed="true">Pokaz automatyczny: wł.</button>
+      <button class="chip" id="playBtn" aria-pressed="false">Zatrzymaj symulacje</button>
+      <div class="counter" id="counter"></div>
+    </div>
+  </header>
+  <div class="progress"><i id="bar"></i></div>
+  <main id="main">
+
+  <!-- ===================== WPROWADZENIE ===================== -->
+  <section class="slide" data-id="start" aria-label="Start">
+    <div class="text">
+      <p class="eyebrow">Fizyka · klasa 8</p>
+      <h1>Napięcie i natężenie prądu elektrycznego</h1>
+      <p class="lead">Co właściwie płynie w przewodach, gdy zapalasz światło? Dlaczego ptak może bezpiecznie siedzieć na linii wysokiego napięcia? Każdy slajd sam pokazuje doświadczenie, a potem możesz nim sterować.</p>
+      <ol class="toc" id="toc"></ol>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · elektrony w drucie miedzianym</span>
+      <canvas id="cHero" class="sim" style="aspect-ratio:420/250" role="img" aria-label="Elektrony swobodne w przewodzie miedzianym"></canvas>
+      <div class="controls">
+        <div class="ctl"><label for="hU">Napięcie na końcach przewodu</label><output id="hUo"></output><input type="range" id="hU" min="0" max="12" step="0.5" value="0"></div>
+      </div>
+      <p class="note">Bez napięcia elektrony swobodne poruszają się chaotycznie we wszystkie strony i prąd nie płynie. Gdy pojawi się napięcie, zaczynają powoli dryfować w stronę bieguna dodatniego: płynie prąd.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="prad-co" data-part="Wprowadzenie" aria-label="Co to jest prąd elektryczny" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Co to jest prąd elektryczny?</h2>
+      <p class="def"><b>Prąd elektryczny</b> to uporządkowany ruch ładunków elektrycznych.</p>
+      <p>Atom ma dodatnio naładowane jądro i ujemnie naładowane elektrony. W metalach część elektronów nie jest związana z żadnym atomem. To <b>elektrony swobodne</b>. Gdy na końcach przewodu pojawi się napięcie, płyną one w stronę bieguna dodatniego.</p>
+      <div class="facts">
+        <div><h4>W metalach płyną</h4><ul><li>elektrony swobodne</li></ul></div>
+        <div><h4>W cieczach (np. woda z solą)</h4><ul><li>jony dodatnie</li><li>jony ujemne</li></ul></div>
+        <div><h4>W gazach (błyskawica)</h4><ul><li>jony i elektrony</li></ul></div>
+      </div>
+      <p><b>Kierunek umowny</b> prądu: od bieguna dodatniego (+) do ujemnego (−) w obwodzie zewnętrznym. Ustalono go, zanim odkryto elektrony, które płyną w przeciwną stronę!</p>
+      <p class="note">Ładunek mierzymy w kulombach (C). Elektron ma ładunek zaledwie 1,6 · 10⁻¹⁹ C. Przy prądzie 1 A przez przewód przepływa w każdej sekundzie ponad 6 miliardów miliardów elektronów.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo</span>
+      <canvas id="cFlow" class="sim" style="aspect-ratio:420/260" role="img" aria-label="Ruch ładunków w metalu i w roztworze soli"></canvas>
+      <div class="chips" id="pcMode">
+        <button class="chip" data-m="metal" aria-pressed="true">W metalu</button>
+        <button class="chip" data-m="sol">W roztworze soli</button>
+      </div>
+      <label class="check"><input type="checkbox" id="pcDir"> Pokaż kierunek umowny prądu</label>
+    </div>
+  </section>
+
+  <section class="slide" data-id="przewodniki" aria-label="Przewodniki i izolatory" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Przewodniki i izolatory</h2>
+      <p class="def"><b>Przewodniki</b> mają dużo swobodnych ładunków i dobrze przewodzą prąd. <b>Izolatory</b> prawie nie mają swobodnych ładunków i nie przewodzą prądu.</p>
+      <div class="facts">
+        <div><h4>Przewodniki</h4><ul><li>metale: miedź, aluminium, srebro</li><li>grafit</li><li>roztwory soli, kwasów, zasad</li><li>ciało człowieka, mokra ziemia</li></ul></div>
+        <div><h4>Izolatory</h4><ul><li>plastik, guma</li><li>szkło, porcelana</li><li>suche drewno, papier</li><li>powietrze, woda destylowana</li></ul></div>
+      </div>
+      <p>Czysta woda destylowana prawie nie przewodzi prądu. Woda z kranu przewodzi, bo są w niej rozpuszczone sole. Woda z solą przewodzi jeszcze lepiej.</p>
+      <p class="note">Przewody elektryczne mają miedziany środek i plastikową osłonę. Miedź przewodzi prąd, a izolacja chroni nas przed porażeniem.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Tester przewodnictwa</span>
+      <svg viewBox="0 0 420 290" role="img" aria-label="Obwód z baterią, żarówką i badanym materiałem"><g id="tsG"></g></svg>
+      <div class="chips" id="tsMat"></div>
+      <div class="readout">
+        <div class="hl"><div class="k">Badany materiał to</div><div class="v vt" id="tsR"></div></div>
+        <div><div class="k">Żarówka</div><div class="v vt" id="tsB"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="obwod" aria-label="Obwód elektryczny" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Obwód elektryczny</h2>
+      <p>Żeby płynął prąd, potrzebny jest <b>zamknięty obwód elektryczny</b>. Najprostszy obwód składa się z:</p>
+      <ul class="legend" id="obList">
+        <li><b>źródła napięcia</b>, np. baterii albo zasilacza,</li>
+        <li><b>przewodów</b>, którymi płyną ładunki,</li>
+        <li><b>odbiornika</b>, np. żarówki, silnika albo grzałki,</li>
+        <li><b>wyłącznika</b>, który zamyka i otwiera obwód.</li>
+      </ul>
+      <p>Gdy obwód jest <b>zamknięty</b>, ładunki mają drogę dookoła i płynie prąd. Gdy jest <b>otwarty</b>, bo wyłącznik jest wyłączony albo przewód przerwany, prąd przestaje płynąć w całym obwodzie naraz.</p>
+      <p class="note">Wyłącznik światła w pokoju po prostu przerywa obwód. Elektrony nie „wyciekają” z otwartego przewodu: bez zamkniętej drogi po prostu stają.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · kliknij wyłącznik</span>
+      <svg viewBox="0 0 420 300" role="img" aria-label="Obwód z baterią, wyłącznikiem i żarówką"><g id="obG"></g></svg>
+      <div class="btnrow">
+        <button class="navbtn primary" id="obSw">Włącz</button>
+        <button class="navbtn" id="obCut">Przetnij przewód</button>
+        <button class="navbtn" id="obBulb">Wykręć żarówkę</button>
+      </div>
+      <label class="check"><input type="checkbox" id="obDir"> Pokaż kierunek umowny prądu</label>
+      <div class="readout"><div class="hl"><div class="k">Stan obwodu</div><div class="v vt" id="obS"></div></div></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="symbole" aria-label="Symbole elementów obwodu" hidden>
+    <div class="text">
+      <p class="eyebrow">Wprowadzenie</p>
+      <h2>Symbole elementów obwodu</h2>
+      <p>Obwody rysujemy za pomocą umownych symboli. Taki rysunek to <b>schemat</b>. Kliknij symbol, żeby sprawdzić, co oznacza. Spróbuj najpierw zgadnąć!</p>
+      <div class="whys" id="symGrid">
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H52 M68 28 H110"/><path d="M52 10 V46" stroke="var(--ink)" stroke-width="2.5"/><path d="M68 18 V38" stroke="var(--ink)" stroke-width="6"/><text x="40" y="14" class="svgt">+</text></svg></summary><p><b>Ogniwo</b> (np. bateria AA). Dłuższa kreska to biegun dodatni.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M6 28 H30 M90 28 H114"/><path d="M30 10 V46 M60 10 V46" stroke="var(--ink)" stroke-width="2.5"/><path d="M42 18 V38 M72 18 V38" stroke="var(--ink)" stroke-width="6"/><path d="M42 28 H60" stroke="var(--ink)" stroke-width="2.5"/><path d="M72 28 H90" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="3 3"/></svg></summary><p><b>Bateria</b>, czyli kilka ogniw połączonych szeregowo.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><path d="M49 17 L71 39 M71 17 L49 39" stroke="var(--ink)" stroke-width="2"/></svg></summary><p><b>Żarówka</b> (lampka).</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H36 M84 28 H110"/><rect x="36" y="19" width="48" height="18" class="comp"/></svg></summary><p><b>Opornik</b> (rezystor), element o określonym oporze.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 32 H40 M80 32 H110"/><circle cx="40" cy="32" r="3.5" fill="var(--ink)"/><circle cx="80" cy="32" r="3.5" fill="var(--ink)"/><path d="M40 32 L76 12" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Wyłącznik otwarty</b>: prąd nie płynie.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 32 H40 M80 32 H110"/><circle cx="40" cy="32" r="3.5" fill="var(--ink)"/><circle cx="80" cy="32" r="3.5" fill="var(--ink)"/><path d="M40 32 L80 28" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Wyłącznik zamknięty</b>: prąd może płynąć.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><text x="60" y="34" text-anchor="middle" class="svgt-b" style="font-size:17px">A</text></svg></summary><p><b>Amperomierz</b>: mierzy natężenie prądu.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><text x="60" y="34" text-anchor="middle" class="svgt-b" style="font-size:17px">V</text></svg></summary><p><b>Woltomierz</b>: mierzy napięcie.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H44 M76 28 H110"/><circle cx="60" cy="28" r="16" class="comp"/><text x="60" y="34" text-anchor="middle" class="svgt-b" style="font-size:17px">M</text></svg></summary><p><b>Silnik elektryczny</b>.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H46 M74 28 H110"/><path d="M46 14 L46 42 L72 28 Z" class="comp"/><path d="M74 14 V42" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Dioda</b>: przepuszcza prąd tylko w jedną stronę.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M10 28 H36 M84 28 H110"/><rect x="36" y="20" width="48" height="16" class="comp"/><path d="M36 28 H84" stroke="var(--ink)" stroke-width="2"/></svg></summary><p><b>Bezpiecznik</b>: przerywa obwód przy zbyt dużym natężeniu.</p></details>
+        <details class="why sym"><summary><svg viewBox="0 0 120 56"><path class="wire" d="M60 6 V30"/><path d="M40 30 H80 M47 38 H73 M54 46 H66" stroke="var(--ink)" stroke-width="2.5"/></svg></summary><p><b>Uziemienie</b>: połączenie z ziemią, które chroni przed porażeniem.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ I: NATĘŻENIE ===================== -->
+  <section class="slide" data-id="natezenie" data-part="Część I · Natężenie prądu" aria-label="Natężenie prądu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Natężenie prądu</h2>
+      <p class="def"><b>Natężenie prądu</b> mówi, jaki ładunek przepływa przez przekrój przewodu w ciągu jednej sekundy.</p>
+      <div class="formula"><b>I</b> = q / t</div>
+      <ul class="legend">
+        <li><b>I</b>: natężenie prądu, w amperach (A)</li>
+        <li><b>q</b>: ładunek, w kulombach (C)</li>
+        <li><b>t</b>: czas, w sekundach (s)</li>
+      </ul>
+      <p><b>1 A = 1 C / 1 s</b>. Prąd o natężeniu 1 A oznacza, że w każdej sekundzie przez przekrój przewodu przepływa ładunek 1 kulomba.</p>
+      <p class="note">Jednostkę nazwano na cześć francuskiego fizyka André-Marie Ampère’a. Natężenie to nie „szybkość” elektronów: one dryfują bardzo powoli, ułamki milimetra na sekundę. Liczy się, ile ładunku przepływa.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · liczymy ładunek</span>
+      <canvas id="cI" class="sim" style="aspect-ratio:420/200" role="img" aria-label="Paczki ładunku przepływające przez przekrój przewodu"></canvas>
+      <div class="controls">
+        <div class="ctl"><label for="niI">Natężenie prądu w obwodzie</label><output id="niIo"></output><input type="range" id="niI" min="0" max="2" step="0.1" value="1"></div>
+      </div>
+      <button class="navbtn" id="niReset" style="justify-self:start">Zacznij liczyć od nowa</button>
+      <div class="readout">
+        <div><div class="k">Czas t</div><div class="v" id="niT"></div></div>
+        <div><div class="k">Ładunek q</div><div class="v" id="niQ"></div></div>
+        <div class="hl"><div class="k">I = q / t</div><div class="v" id="niR"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="amperomierz" aria-label="Pomiar natężenia: amperomierz" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Pomiar natężenia: amperomierz</h2>
+      <p>Natężenie prądu mierzymy <b>amperomierzem</b>. Włączamy go do obwodu <b>szeregowo</b>, czyli w jednym ciągu z odbiornikiem, tak żeby przepływał przez niego cały prąd.</p>
+      <ul class="legend">
+        <li>Amperomierz łączymy <b>szeregowo</b> z odbiornikiem.</li>
+        <li>Zacisk „+” miernika łączymy od strony bieguna dodatniego źródła.</li>
+        <li>Zaczynamy od największego zakresu, a potem go zmniejszamy.</li>
+        <li>W obwodzie szeregowym amperomierz pokaże to samo w każdym miejscu.</li>
+      </ul>
+      <p class="note">Amperomierz ma bardzo mały opór. Włączony równolegle do odbiornika tworzy prawie zwarcie: płynie przez niego ogromny prąd i miernik może się zepsuć.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Obwód z amperomierzem"><g id="amG"></g></svg>
+      <div class="chips" id="amPos">
+        <button class="chip" data-p="s" aria-pressed="true">Amperomierz szeregowo</button>
+        <button class="chip" data-p="r">Amperomierz równolegle do żarówki</button>
+      </div>
+      <div class="btnrow">
+        <button class="navbtn primary" id="amSw">Zamknij obwód</button>
+        <button class="navbtn" id="amFix">Wymień bezpiecznik miernika</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Amperomierz pokazuje</div><div class="v" id="amI"></div></div>
+        <div><div class="k">Co się dzieje</div><div class="v vt" id="amS"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="natezenia" aria-label="Natężenia prądu wokół nas" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Jakie natężenia spotykamy?</h2>
+      <p>Natężenia prądu w urządzeniach bardzo się różnią: od milionowych części ampera w zegarku do dziesiątek tysięcy amperów w błyskawicy. Dlatego wykres ma skalę, w której każda kratka oznacza 10 razy więcej.</p>
+      <ul class="legend">
+        <li><b>1 mA</b> (miliamper) = 0,001 A</li>
+        <li><b>1 µA</b> (mikroamper) = 0,000 001 A</li>
+        <li><b>1 kA</b> (kiloamper) = 1000 A</li>
+      </ul>
+      <p class="note">Czerwona linia to ok. 30 mA. Prąd o takim natężeniu płynący przez ciało człowieka jest już groźny dla życia. Zwykła żarówka LED pobiera mniej więcej tyle samo!</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Wykres natężeń prądu w różnych urządzeniach"><g id="niG"></g></svg>
+      <p class="def" id="niInfo" style="margin:0" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="jednostki" aria-label="Jednostki i przedrostki" hidden>
+    <div class="text">
+      <p class="eyebrow">Część I · natężenie prądu</p>
+      <h2>Jednostki i przedrostki</h2>
+      <p>W elektryczności często spotkasz bardzo małe i bardzo duże wartości. Zamiast pisać wiele zer, używamy przedrostków:</p>
+      <ul class="legend" id="jnList">
+        <li><b>mikro (µ)</b> = 0,000 001, np. 5 µA = 0,000 005 A</li>
+        <li><b>mili (m)</b> = 0,001, np. 20 mA = 0,02 A</li>
+        <li><b>kilo (k)</b> = 1000, np. 4,7 kΩ = 4700 Ω</li>
+        <li><b>mega (M)</b> = 1 000 000, np. 2 MW = 2 000 000 W</li>
+      </ul>
+      <p>Najważniejsze jednostki: natężenie w <b>amperach (A)</b>, napięcie w <b>woltach (V)</b>, opór w <b>omach (Ω)</b>, moc w <b>watach (W)</b>.</p>
+      <p class="note">Przed obliczeniami zawsze zamień wartości na podstawowe jednostki: mA na A, kΩ na Ω, minuty na sekundy.</p>
+    </div>
+    <div class="lab">
+      <h3>Przelicznik jednostek</h3>
+      <div class="chips" id="jnQ"></div>
+      <div class="btnrow">
+        <label for="jnV" class="sr">Wartość</label><input id="jnV" class="inp" inputmode="decimal" value="20" autocomplete="off">
+        <label for="jnU" class="sr">Jednostka</label><select id="jnU" class="inp"></select>
+      </div>
+      <div class="chips" id="jnPre">
+        <button class="chip" data-q="Natężenie" data-v="20" data-u="mA">Dioda LED · 20 mA</button>
+        <button class="chip" data-q="Natężenie" data-v="2" data-u="µA">Zegarek · 2 µA</button>
+        <button class="chip" data-q="Napięcie" data-v="400" data-u="kV">Linia · 400 kV</button>
+        <button class="chip" data-q="Opór" data-v="4.7" data-u="kΩ">Opornik · 4,7 kΩ</button>
+        <button class="chip" data-q="Moc" data-v="2" data-u="kW">Czajnik · 2 kW</button>
+      </div>
+      <div class="readout" id="jnOut"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ II: NAPIĘCIE ===================== -->
+  <section class="slide" data-id="napiecie" data-part="Część II · Napięcie" aria-label="Napięcie elektryczne" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Napięcie elektryczne</h2>
+      <p>Źródło napięcia, np. bateria, działa jak pompa. Wykonuje pracę, rozdzielając ładunki: na jednym biegunie gromadzi nadmiar elektronów (−), na drugim ich niedobór (+). Dzięki temu w obwodzie może płynąć prąd.</p>
+      <p class="def"><b>Napięcie</b> mówi, jaką pracę wykonuje źródło, przenosząc w obwodzie ładunek 1 kulomba.</p>
+      <div class="formula"><b>U</b> = W / q</div>
+      <ul class="legend">
+        <li><b>U</b>: napięcie, w woltach (V)</li>
+        <li><b>W</b>: praca, w dżulach (J)</li>
+        <li><b>q</b>: ładunek, w kulombach (C)</li>
+      </ul>
+      <p class="note">Porównanie z wodą: bateria to pompa, napięcie to różnica wysokości, natężenie to ilość płynącej wody, a opór to zwężenie rury. Jednostkę wolt nazwano na cześć Alessandra Volty.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · woda i prąd</span>
+      <svg viewBox="0 0 440 300" role="img" aria-label="Obwód wodny i obwód elektryczny obok siebie"><g id="naG"></g></svg>
+      <div class="controls">
+        <div class="ctl"><label for="naU">Napięcie (wysokość)</label><output id="naUo"></output><input type="range" id="naU" min="0" max="12" step="0.5" value="6"></div>
+        <div class="ctl"><label for="naR">Opór (zwężenie rury)</label><output id="naRo"></output><input type="range" id="naR" min="2" max="20" step="1" value="6"></div>
+      </div>
+      <div class="readout">
+        <div><div class="k">Napięcie U</div><div class="v" id="naUv"></div></div>
+        <div class="hl"><div class="k">Natężenie I</div><div class="v" id="naIv"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="zrodla" aria-label="Źródła napięcia" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Źródła napięcia</h2>
+      <ul class="legend">
+        <li><b>Ogniwo</b>: np. „paluszek” AA, 1,5 V.</li>
+        <li><b>Bateria</b>: kilka ogniw połączonych szeregowo. Płaska bateria 4,5 V to 3 ogniwa.</li>
+        <li><b>Akumulator</b>: można go ładować. W telefonie ma 3,7 V, w samochodzie 12 V.</li>
+        <li><b>Zasilacz</b>: zamienia napięcie z gniazdka na niższe, np. 5 V dla telefonu.</li>
+        <li><b>Gniazdko</b>: 230 V.</li>
+        <li><b>Ogniwo słoneczne</b> i <b>prądnica</b> w elektrowni.</li>
+      </ul>
+      <p>Ogniwa połączone szeregowo, biegun „+” jednego z „−” następnego, <b>sumują napięcia</b>. Ogniwo włożone odwrotnie odejmuje swoje napięcie.</p>
+      <p class="note">Dlatego w latarce ważne jest, żeby baterie włożyć zgodnie z rysunkiem. Jedna odwrotnie włożona bateria może sprawić, że latarka prawie nie świeci.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Zbuduj baterię</span>
+      <svg viewBox="0 0 420 270" role="img" aria-label="Ogniwa połączone szeregowo i żarówka"><g id="zrG"></g></svg>
+      <div class="btnrow">
+        <button class="navbtn primary" id="zrAdd">Dodaj ogniwo</button>
+        <button class="navbtn" id="zrDel">Usuń ogniwo</button>
+        <button class="navbtn" id="zrFlip">Odwróć ostatnie ogniwo</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Napięcie baterii</div><div class="v" id="zrU"></div></div>
+        <div><div class="k">Żarówka 4,5 V</div><div class="v vt" id="zrS"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="woltomierz" aria-label="Pomiar napięcia: woltomierz" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Pomiar napięcia: woltomierz</h2>
+      <p>Napięcie mierzymy <b>woltomierzem</b>. Włączamy go <b>równolegle</b> do odbiornika: jeden przewód miernika przed odbiornikiem, drugi za nim. Woltomierz mierzy napięcie między dwoma punktami obwodu.</p>
+      <ul class="legend">
+        <li>Woltomierz łączymy <b>równolegle</b> z odbiornikiem.</li>
+        <li>Ma bardzo duży opór, więc prawie nie płynie przez niego prąd.</li>
+        <li>Zacisk „+” łączymy z punktem bliżej bieguna dodatniego.</li>
+      </ul>
+      <p>Napięcie baterii rozkłada się na odbiorniki: na większym oporze jest większe napięcie.</p>
+      <p class="note">Między dwoma punktami tego samego przewodu woltomierz pokaże 0 V. Dlatego ptak siedzący na jednym przewodzie jest bezpieczny: między jego nogami nie ma napięcia.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Kliknij dwa punkty obwodu</span>
+      <svg viewBox="0 0 420 310" role="img" aria-label="Obwód z baterią 9 V, dwoma opornikami i woltomierzem"><g id="vmG"></g></svg>
+      <div class="readout">
+        <div class="hl"><div class="k">Woltomierz pokazuje</div><div class="v" id="vmV"></div></div>
+        <div><div class="k">Co mierzymy</div><div class="v vt" id="vmInfo"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="napiecia" aria-label="Napięcia wokół nas" hidden>
+    <div class="text">
+      <p class="eyebrow">Część II · napięcie</p>
+      <h2>Jakie napięcia spotykamy?</h2>
+      <p>Napięcia wokół nas sięgają od setnych części wolta w naszych nerwach do setek milionów woltów w piorunie. Tu też każda kratka wykresu to 10 razy więcej.</p>
+      <ul class="legend">
+        <li><b>1 mV</b> (miliwolt) = 0,001 V</li>
+        <li><b>1 kV</b> (kilowolt) = 1000 V</li>
+        <li><b>1 MV</b> (megawolt) = 1 000 000 V</li>
+      </ul>
+      <p class="note">Czerwona linia to 50 V. W suchych warunkach napięcie do ok. 50 V uważa się za bezpieczne dla człowieka, a w wilgotnych tylko do ok. 25 V. Napięcie w gniazdku, 230 V, zawsze może zabić!</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 380" role="img" aria-label="Wykres napięć w różnych urządzeniach"><g id="nnG"></g></svg>
+      <p class="def" id="nnInfo" style="margin:0" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ III: OPÓR I OBWODY ===================== -->
+  <section class="slide" data-id="ohm" data-part="Część III · Prawo Ohma i obwody" aria-label="Prawo Ohma" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Prawo Ohma</h2>
+      <p class="def">Natężenie prądu płynącego przez przewodnik jest <b>wprost proporcjonalne</b> do napięcia między jego końcami, jeśli temperatura przewodnika się nie zmienia.</p>
+      <p>Gdy zwiększymy napięcie 2 razy, natężenie też wzrośnie 2 razy. Iloraz napięcia i natężenia jest więc stały. To <b>opór elektryczny</b> (rezystancja) przewodnika.</p>
+      <div class="formula"><b>R</b> = U / I &nbsp;→&nbsp; I = U / R &nbsp;→&nbsp; U = R · I</div>
+      <ul class="legend">
+        <li><b>R</b>: opór, w omach (Ω). 1 Ω = 1 V / 1 A</li>
+      </ul>
+      <p class="note">Georg Simon Ohm opisał tę zależność w 1827 roku. Im większy opór, tym mniejsze natężenie przy tym samym napięciu.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo</span>
+      <svg viewBox="0 0 440 300" role="img" aria-label="Obwód z zasilaczem, opornikiem, amperomierzem i woltomierzem oraz wykres"><g id="ohG"></g></svg>
+      <div class="chips" id="ohR">
+        <button class="chip" data-r="10">Opornik 10 Ω</button>
+        <button class="chip" data-r="20" aria-pressed="true">Opornik 20 Ω</button>
+        <button class="chip" data-r="40">Opornik 40 Ω</button>
+      </div>
+      <div class="controls">
+        <div class="ctl"><label for="ohU">Napięcie zasilacza</label><output id="ohUo"></output><input type="range" id="ohU" min="0" max="12" step="0.5" value="6"></div>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Amperomierz</div><div class="v" id="ohI"></div></div>
+        <div><div class="k">Woltomierz</div><div class="v" id="ohV"></div></div>
+        <div><div class="k">U / I</div><div class="v" id="ohRr"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="charakterystyka" aria-label="Wykres I(U)" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Wykres zależności I od U</h2>
+      <p>Gdy zmierzymy natężenie przy różnych napięciach i zaznaczymy punkty na wykresie, dla opornika dostaniemy <b>linię prostą przechodzącą przez początek układu</b>. Taki wykres to charakterystyka prądowo-napięciowa.</p>
+      <p>Im większy opór, tym prosta jest mniej stroma: przy tym samym napięciu płynie mniejszy prąd.</p>
+      <p><b>Żarówka nie spełnia prawa Ohma.</b> Jej włókno mocno się nagrzewa, a opór metalu rośnie z temperaturą. Dlatego jej wykres się wygina.</p>
+      <p class="note">Zrób pomiary sam: wybierz element, ustaw napięcie, kliknij „Zapisz pomiar” i powtórz dla kilku napięć.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Wykres natężenia od napięcia z punktami pomiarowymi"><g id="chG"></g></svg>
+      <div class="chips" id="chEl">
+        <button class="chip" data-e="0" aria-pressed="true">Opornik 20 Ω</button>
+        <button class="chip" data-e="1">Opornik 40 Ω</button>
+        <button class="chip" data-e="2">Żarówka</button>
+      </div>
+      <div class="controls">
+        <div class="ctl"><label for="chU">Napięcie</label><output id="chUo"></output><input type="range" id="chU" min="0" max="12" step="0.5" value="4"></div>
+      </div>
+      <div class="btnrow">
+        <button class="navbtn primary" id="chSave">Zapisz pomiar</button>
+        <button class="navbtn" id="chClear">Wyczyść pomiary</button>
+      </div>
+      <p class="calc" id="chTab"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="opor" aria-label="Od czego zależy opór" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Od czego zależy opór przewodu?</h2>
+      <ul class="legend" id="opList">
+        <li><b>Długość</b>: im dłuższy przewód, tym większy opór.</li>
+        <li><b>Grubość</b> (pole przekroju): im grubszy przewód, tym mniejszy opór.</li>
+        <li><b>Materiał</b>: srebro i miedź mają mały opór, nikielina duży.</li>
+        <li><b>Temperatura</b>: w metalach opór rośnie, gdy rośnie temperatura.</li>
+      </ul>
+      <div class="formula"><b>R</b> = ρ · l / S</div>
+      <ul class="legend">
+        <li><b>ρ</b> (ro): opór właściwy materiału</li>
+        <li><b>l</b>: długość przewodu, <b>S</b>: pole przekroju</li>
+      </ul>
+      <p class="note">Dlatego kabel czajnika jest grubszy niż kabel lampki, a grzałki i oporniki robi się z cienkiego drutu z nikieliny.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 250" role="img" aria-label="Przewód o zmiennej długości i grubości w obwodzie z żarówką"><g id="opG"></g></svg>
+      <div class="chips" id="opMat"></div>
+      <div class="controls">
+        <div class="ctl"><label for="opL">Długość przewodu</label><output id="opLo"></output><input type="range" id="opL" min="0.5" max="10" step="0.5" value="2"></div>
+        <div class="ctl"><label for="opS">Pole przekroju</label><output id="opSo"></output><input type="range" id="opS" min="0.1" max="2.5" step="0.1" value="1"></div>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Opór przewodu</div><div class="v" id="opR"></div></div>
+        <div><div class="k">Natężenie w obwodzie</div><div class="v" id="opI"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="szeregowe" aria-label="Połączenie szeregowe" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Połączenie szeregowe</h2>
+      <p>Odbiorniki są połączone jeden za drugim i tworzą <b>jedną drogę</b> dla prądu.</p>
+      <ul class="legend" id="szList">
+        <li><b>Natężenie</b> jest wszędzie takie samo: I = I₁ = I₂</li>
+        <li><b>Napięcie</b> źródła rozkłada się na odbiorniki: U = U₁ + U₂</li>
+        <li><b>Opór zastępczy</b> to suma oporów: R = R₁ + R₂</li>
+        <li>Gdy jeden odbiornik się przepali albo go wykręcimy, <b>gasną wszystkie</b>.</li>
+      </ul>
+      <p class="note">Tak były połączone dawne lampki choinkowe: gdy przepaliła się jedna żarówka, gasł cały łańcuch i trzeba było szukać, która to.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Kliknij żarówkę, żeby ją wykręcić</span>
+      <svg viewBox="0 0 420 300" role="img" aria-label="Żarówki połączone szeregowo"><g id="szG"></g></svg>
+      <div class="chips" id="szN">
+        <button class="chip" data-n="1">1 żarówka</button>
+        <button class="chip" data-n="2" aria-pressed="true">2 żarówki</button>
+        <button class="chip" data-n="3">3 żarówki</button>
+        <button class="chip" data-n="4">4 żarówki</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Natężenie</div><div class="v" id="szI"></div></div>
+        <div><div class="k">Napięcie na 1 żarówce</div><div class="v" id="szU"></div></div>
+        <div><div class="k">Opór zastępczy</div><div class="v" id="szR"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="rownolegle" aria-label="Połączenie równoległe" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Połączenie równoległe</h2>
+      <p>Każdy odbiornik ma <b>własną drogę</b> do źródła. Prąd rozgałęzia się w węzłach.</p>
+      <ul class="legend" id="rwList">
+        <li><b>Napięcie</b> na każdym odbiorniku jest takie samo jak napięcie źródła: U = U₁ = U₂</li>
+        <li><b>Natężenie</b> się rozgałęzia: I = I₁ + I₂</li>
+        <li><b>Opór zastępczy</b> jest mniejszy od najmniejszego z oporów.</li>
+        <li>Gdy jeden odbiornik się wyłączy, <b>pozostałe działają dalej</b>.</li>
+      </ul>
+      <p class="note">Tak połączone są urządzenia w mieszkaniu. Każde dostaje 230 V i można je włączać niezależnie. Ale każde kolejne zwiększa natężenie w przewodach, dlatego potrzebne są bezpieczniki.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Kliknij żarówkę, żeby ją wykręcić</span>
+      <svg viewBox="0 0 420 300" role="img" aria-label="Żarówki połączone równolegle"><g id="rwG"></g></svg>
+      <div class="chips" id="rwN">
+        <button class="chip" data-n="1">1 żarówka</button>
+        <button class="chip" data-n="2" aria-pressed="true">2 żarówki</button>
+        <button class="chip" data-n="3">3 żarówki</button>
+        <button class="chip" data-n="4">4 żarówki</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Natężenie ze źródła</div><div class="v" id="rwI"></div></div>
+        <div><div class="k">Przez 1 żarówkę</div><div class="v" id="rwIk"></div></div>
+        <div><div class="k">Opór zastępczy</div><div class="v" id="rwR"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="polaczenia" aria-label="Szeregowo czy równolegle" hidden>
+    <div class="text">
+      <p class="eyebrow">Część III · prawo Ohma i obwody</p>
+      <h2>Szeregowo czy równolegle?</h2>
+      <div class="tablewrap">
+        <table class="cmp">
+          <thead><tr><th scope="col">Cecha</th><th scope="col">Połączenie szeregowe</th><th scope="col">Połączenie równoległe</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Droga prądu</th><td>jedna, wspólna dla wszystkich odbiorników</td><td>osobna dla każdego odbiornika</td></tr>
+            <tr><th scope="row">Natężenie</th><td>wszędzie takie samo: <code>I = I₁ = I₂</code></td><td>sumuje się: <code>I = I₁ + I₂</code></td></tr>
+            <tr><th scope="row">Napięcie</th><td>sumuje się: <code>U = U₁ + U₂</code></td><td>wszędzie takie samo: <code>U = U₁ = U₂</code></td></tr>
+            <tr><th scope="row">Opór zastępczy</th><td>suma oporów, większy od każdego: <code>R = R₁ + R₂</code></td><td>mniejszy od najmniejszego z oporów</td></tr>
+            <tr><th scope="row">Gdy jeden odbiornik przestanie działać</th><td>gasną wszystkie</td><td>pozostałe działają dalej</td></tr>
+            <tr><th scope="row">Przykłady</th><td>dawne lampki choinkowe, ogniwa w latarce</td><td>instalacja w mieszkaniu, reflektory samochodu</td></tr>
+            <tr><th scope="row">Jak włączamy miernik</th><td>amperomierz</td><td>woltomierz</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ IV: ENERGIA I BEZPIECZEŃSTWO ===================== -->
+  <section class="slide" data-id="moc" data-part="Część IV · Energia i bezpieczeństwo" aria-label="Praca i moc prądu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Praca i moc prądu</h2>
+      <p>Prąd płynący przez odbiornik wykonuje pracę: grzeje wodę, świeci, obraca silnik.</p>
+      <div class="formula"><b>W</b> = U · I · t &nbsp;&nbsp; <b>P</b> = U · I</div>
+      <ul class="legend">
+        <li><b>W</b>: praca (energia), w dżulach (J)</li>
+        <li><b>P</b>: moc, w watach (W). 1 W = 1 V · 1 A</li>
+        <li><b>t</b>: czas</li>
+      </ul>
+      <p>Za prąd płacimy według <b>kilowatogodzin (kWh)</b>. 1 kWh to energia, którą zużywa urządzenie o mocy 1000 W przez 1 godzinę. <b>1 kWh = 3 600 000 J</b>.</p>
+      <p class="note">W obliczeniach przyjmujemy cenę 1 zł za 1 kWh. Prawdziwa cena zależy od taryfy i dostawcy.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Licznik energii na żywo</span>
+      <svg viewBox="0 0 420 150" role="img" aria-label="Licznik energii elektrycznej"><g id="moG"></g></svg>
+      <div class="chips" id="moDev"></div>
+      <div class="controls">
+        <div class="ctl"><label for="moT">Czas pracy dziennie</label><output id="moTo"></output><input type="range" id="moT" min="0.1" max="24" step="0.1" value="1"></div>
+        <div class="ctl"><label for="moD">Liczba dni</label><output id="moDo"></output><input type="range" id="moD" min="1" max="365" step="1" value="30"></div>
+      </div>
+      <div class="readout">
+        <div><div class="k">Natężenie przy 230 V</div><div class="v" id="moI"></div></div>
+        <div class="hl"><div class="k">Energia</div><div class="v" id="moE"></div></div>
+        <div><div class="k">Koszt</div><div class="v" id="moC"></div></div>
+      </div>
+      <p class="calc" id="moCalc"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="skutki" aria-label="Skutki przepływu prądu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Skutki przepływu prądu</h2>
+      <ul class="legend" id="skList">
+        <li><b>Cieplny</b>: przewodnik się nagrzewa. Czajnik, żelazko, piekarnik, suszarka.</li>
+        <li><b>Świetlny</b>: przewodnik albo gaz świeci. Żarówka, dioda LED, świetlówka, błyskawica.</li>
+        <li><b>Magnetyczny</b>: wokół przewodu z prądem powstaje pole magnetyczne. Elektromagnes, silnik, głośnik, dzwonek.</li>
+        <li><b>Chemiczny</b>: prąd rozkłada substancje w roztworach. Elektroliza, ładowanie akumulatora, pokrywanie metali chromem.</li>
+      </ul>
+      <p class="note">Skutek magnetyczny odkrył w 1820 roku Hans Christian Ørsted: igła kompasu położonego przy przewodzie odchylała się, gdy płynął prąd.</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo</span>
+      <svg viewBox="0 0 400 260" role="img" aria-label="Skutek przepływu prądu"><g id="skG"></g></svg>
+      <div class="chips" id="skE">
+        <button class="chip" data-e="0" aria-pressed="true">Cieplny</button>
+        <button class="chip" data-e="1">Świetlny</button>
+        <button class="chip" data-e="2">Magnetyczny</button>
+        <button class="chip" data-e="3">Chemiczny</button>
+      </div>
+      <button class="navbtn primary" id="skOn" style="justify-self:start">Włącz prąd</button>
+      <p class="def" id="skInfo" style="margin:0" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="slide" data-id="bezpiecznik" aria-label="Bezpiecznik i zwarcie" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Bezpiecznik, przeciążenie i zwarcie</h2>
+      <p>Przewody w instalacji wytrzymują tylko określone natężenie. Zbyt duży prąd mocno je nagrzewa i może wywołać pożar.</p>
+      <ul class="legend">
+        <li><b>Przeciążenie</b>: włączamy naraz zbyt wiele urządzeń o dużej mocy. Natężenia z gałęzi równoległych się sumują.</li>
+        <li><b>Zwarcie</b>: przewody łączą się bezpośrednio, z pominięciem odbiornika. Opór jest wtedy prawie zerowy, a natężenie ogromne.</li>
+      </ul>
+      <p><b>Bezpiecznik</b>, np. 16 A, przerywa obwód, gdy natężenie jest za duże. Dawniej używano topikowych „korków”, w których przepalał się drucik. Dziś stosuje się bezpieczniki automatyczne, które po usunięciu przyczyny włącza się ponownie.</p>
+      <p class="note">Zanim włączysz bezpiecznik ponownie, wyłącz część urządzeń albo usuń przyczynę zwarcia. Nigdy nie zastępuj bezpiecznika drutem!</p>
+    </div>
+    <div class="lab">
+      <span class="live">Symulacja na żywo · włączaj urządzenia</span>
+      <svg viewBox="0 0 420 260" role="img" aria-label="Skrzynka z bezpiecznikiem i listwa z urządzeniami"><g id="bzG"></g></svg>
+      <div class="chips" id="bzDev"></div>
+      <div class="btnrow">
+        <button class="navbtn" id="bzShort">Zwarcie!</button>
+        <button class="navbtn primary" id="bzReset">Włącz bezpiecznik ponownie</button>
+      </div>
+      <div class="readout">
+        <div class="hl"><div class="k">Natężenie w przewodach</div><div class="v" id="bzI"></div></div>
+        <div><div class="k">Stan</div><div class="v vt" id="bzS"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-id="bezpieczenstwo" aria-label="Prąd a ludzkie ciało" hidden>
+    <div class="text">
+      <p class="eyebrow">Część IV · energia i bezpieczeństwo</p>
+      <h2>Prąd a ludzkie ciało</h2>
+      <p>Ciało człowieka przewodzi prąd, bo zawiera wodę z rozpuszczonymi solami. Groźne jest <b>natężenie</b> prądu płynącego przez ciało. Zależy ono od napięcia i od oporu ciała: mokra skóra ma znacznie mniejszy opór niż sucha.</p>
+      <h3>Zasady bezpieczeństwa</h3>
+      <ul class="legend" id="bsList">
+        <li>Nie dotykaj uszkodzonych przewodów i urządzeń.</li>
+        <li>Nigdy nie wkładaj niczego do gniazdka.</li>
+        <li>Nie używaj urządzeń elektrycznych mokrymi rękami ani przy wannie.</li>
+        <li>Wyciągaj wtyczkę, trzymając za wtyczkę, a nie za kabel.</li>
+        <li>Nie zbliżaj się do zerwanych linii i nie wchodź na słupy.</li>
+        <li>Gdy ktoś jest porażony, najpierw wyłącz prąd, dopiero potem go dotknij.</li>
+      </ul>
+      <p class="note">Wyłącznik różnicowoprądowy w mieszkaniu odcina prąd, gdy wykryje „ucieczkę” prądu ok. 30 mA, np. przez ciało człowieka.</p>
+    </div>
+    <div class="lab">
+      <svg viewBox="0 0 420 300" role="img" aria-label="Skala skutków prądu płynącego przez ciało"><g id="bsG"></g></svg>
+      <div class="chips" id="bsU">
+        <button class="chip" data-u="4.5" aria-pressed="true">Bateria 4,5 V</button>
+        <button class="chip" data-u="12">Akumulator 12 V</button>
+        <button class="chip" data-u="230">Gniazdko 230 V</button>
+      </div>
+      <div class="chips" id="bsSkin">
+        <button class="chip" data-r="100000" aria-pressed="true">Sucha skóra</button>
+        <button class="chip" data-r="1000">Mokra skóra</button>
+      </div>
+      <div class="readout">
+        <div><div class="k">Opór ciała</div><div class="v" id="bsR"></div></div>
+        <div class="hl"><div class="k">Natężenie przez ciało</div><div class="v" id="bsI"></div></div>
+        <div><div class="k">Skutek</div><div class="v vt" id="bsE"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ V: WIEDZA W PRAKTYCE ===================== -->
+  <section class="slide single" data-id="historia" data-part="Część V · Ciekawostki i porównania" aria-label="Odkrywcy elektryczności" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Odkrywcy elektryczności</h2>
+      <p>Kliknij datę na osi czasu.</p>
+      <div class="timeline" id="tlBar"></div>
+      <div class="tlcard" id="tlCard" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="przyroda" aria-label="Prąd w przyrodzie" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Prąd i napięcie w przyrodzie</h2>
+      <p>Elektryczność nie jest wynalazkiem człowieka. Kliknij, żeby dowiedzieć się więcej.</p>
+      <div class="whys">
+        <details class="why info"><summary>Piorun</summary><p>To gigantyczna iskra między chmurą a ziemią. Napięcie sięga setek milionów woltów, a natężenie ok. 30 000 A. Trwa jednak tylko ułamek sekundy.</p></details>
+        <details class="why info"><summary>Węgorz elektryczny</summary><p>Ta ryba z Ameryki Południowej ma narządy elektryczne zbudowane z tysięcy komórek połączonych jak ogniwa w baterii. Potrafi wytworzyć napięcie nawet ok. 800 V i ogłuszyć ofiarę.</p></details>
+        <details class="why info"><summary>Nasz układ nerwowy</summary><p>Komórki nerwowe przesyłają sygnały elektryczne. Napięcie w błonie komórki nerwowej to ok. 0,07 V, a impulsy biegną nerwami z prędkością nawet ponad 100 m/s.</p></details>
+        <details class="why info"><summary>Serce i EKG</summary><p>Każde uderzenie serca wywołuje impuls elektryczny. Lekarz mierzy go elektrokardiografem (EKG), który rejestruje napięcia rzędu tysięcznych części wolta.</p></details>
+        <details class="why info"><summary>Ptak na linii wysokiego napięcia</summary><p>Ptak siedzi na jednym przewodzie, więc obie jego nogi są w tym samym „położeniu elektrycznym”. Między nogami nie ma napięcia i przez ptaka nie płynie prąd. Groźne byłoby dotknięcie dwóch przewodów naraz.</p></details>
+        <details class="why info"><summary>Rekiny</summary><p>Rekiny mają w pysku specjalne narządy, które wyczuwają słabe pola elektryczne wytwarzane przez mięśnie ryb. Znajdują w ten sposób ofiarę ukrytą w piasku.</p></details>
+        <details class="why info"><summary>Drętwa</summary><p>Płaszczka drętwa ma narządy elektryczne po bokach głowy i potrafi wytworzyć napięcie ok. 200 V. Starożytni Grecy i Rzymianie używali jej do łagodzenia bólu.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="porownanie" aria-label="Napięcie a natężenie" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Napięcie a natężenie</h2>
+      <div class="tablewrap">
+        <table class="cmp">
+          <thead><tr><th scope="col">Cecha</th><th scope="col">Napięcie (U)</th><th scope="col">Natężenie (I)</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Co opisuje</th><td>pracę źródła przy przenoszeniu ładunku 1 C</td><td>ładunek przepływający w ciągu 1 s</td></tr>
+            <tr><th scope="row">Wzór</th><td><code>U = W / q</code></td><td><code>I = q / t</code></td></tr>
+            <tr><th scope="row">Jednostka</th><td>wolt (V)</td><td>amper (A)</td></tr>
+            <tr><th scope="row">Przyrząd</th><td>woltomierz</td><td>amperomierz</td></tr>
+            <tr><th scope="row">Jak włączamy miernik</th><td>równolegle do odbiornika</td><td>szeregowo z odbiornikiem</td></tr>
+            <tr><th scope="row">Porównanie z wodą</th><td>różnica wysokości</td><td>ilość płynącej wody</td></tr>
+            <tr><th scope="row">Połączenie szeregowe</th><td>sumuje się na odbiornikach</td><td>wszędzie takie samo</td></tr>
+            <tr><th scope="row">Połączenie równoległe</th><td>na każdym odbiorniku takie samo</td><td>sumuje się w węzłach</td></tr>
+            <tr><th scope="row">Związek</th><td colspan="2">prawo Ohma: <code>I = U / R</code>, moc: <code>P = U · I</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="segreguj" aria-label="Gra: napięcie czy natężenie?" hidden>
+    <div class="text">
+      <p class="eyebrow">Część V · ciekawostki i porównania</p>
+      <h2>Gra: napięcie czy natężenie?</h2>
+      <p>Przeciągnij każdą kartę do właściwego pojemnika. Możesz też kliknąć kartę, a potem pojemnik.</p>
+      <div class="sortbar"><span class="score" id="sgScore"></span><button class="navbtn" id="sgReset">Zagraj od nowa</button></div>
+      <div class="pool" id="sgPool"></div>
+      <div class="bins">
+        <div class="bin" data-bin="u" tabindex="0" role="button" aria-label="Pojemnik: napięcie"><h3>Napięcie (U)</h3><div class="binbody"></div></div>
+        <div class="bin" data-bin="i" tabindex="0" role="button" aria-label="Pojemnik: natężenie"><h3>Natężenie (I)</h3><div class="binbody"></div></div>
+      </div>
+      <p class="expl" id="sgMsg" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== CZĘŚĆ VI: ĆWICZENIA ===================== -->
+  <section class="slide single" data-id="domowe" data-part="Część VI · Ćwiczenia" aria-label="Doświadczenia do zrobienia w domu" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Doświadczenia do zrobienia w domu</h2>
+      <p>Używaj tylko baterii! <b>Nigdy nie eksperymentuj z gniazdkiem ani z urządzeniami zasilanymi z sieci.</b> Kliknij, żeby zobaczyć instrukcję.</p>
+      <div class="whys">
+        <details class="why info"><summary>Ogniwo z cytryny</summary><p><b>Potrzebujesz:</b> kilku cytryn, miedzianych monet lub drutu, ocynkowanych gwoździ, przewodów z krokodylkami i diody LED.</p><p><b>Zrób:</b> wbij w każdą cytrynę gwóźdź i monetę. Połącz cytryny szeregowo: moneta jednej z gwoździem następnej. Podłącz diodę.</p><p><b>Dlaczego:</b> dwa różne metale w kwaśnym soku tworzą ogniwo o napięciu ok. 0,9 V. Kilka ogniw szeregowo sumuje napięcia i dioda zaczyna świecić.</p></details>
+        <details class="why info"><summary>Tester przewodnictwa</summary><p><b>Potrzebujesz:</b> płaskiej baterii 4,5 V, małej żarówki z oprawką i trzech przewodów.</p><p><b>Zrób:</b> zbuduj obwód z przerwą. Dotykaj końcami przewodów w przerwie różnych przedmiotów: łyżki, ołówka, gumki, plastiku.</p><p><b>Dlaczego:</b> żarówka świeci tylko wtedy, gdy przedmiot jest przewodnikiem i zamyka obwód.</p></details>
+        <details class="why info"><summary>Elektromagnes z gwoździa</summary><p><b>Potrzebujesz:</b> dużego stalowego gwoździa, ok. 1 m cienkiego izolowanego drutu, baterii 4,5 V i spinaczy.</p><p><b>Zrób:</b> nawiń drut na gwóźdź, końce podłącz do baterii tylko na kilka sekund (drut się nagrzewa!). Zbliż gwóźdź do spinaczy.</p><p><b>Dlaczego:</b> prąd płynący w zwojach wytwarza pole magnetyczne. Gwóźdź staje się magnesem, dopóki płynie prąd.</p></details>
+        <details class="why info"><summary>Doświadczenie Ørsteda</summary><p><b>Potrzebujesz:</b> kompasu, kawałka drutu i baterii.</p><p><b>Zrób:</b> połóż drut nad igłą kompasu, równolegle do niej. Na chwilę podłącz końce drutu do baterii.</p><p><b>Dlaczego:</b> wokół przewodu z prądem powstaje pole magnetyczne, które odchyla igłę.</p></details>
+        <details class="why info"><summary>Szeregowo i równolegle</summary><p><b>Potrzebujesz:</b> baterii 4,5 V, dwóch takich samych żarówek z oprawkami i przewodów.</p><p><b>Zrób:</b> połącz żarówki najpierw szeregowo, potem równolegle. Porównaj, jak jasno świecą. Wykręć jedną.</p><p><b>Dlaczego:</b> w połączeniu szeregowym na każdej żarówce jest połowa napięcia i obie świecą słabo. W równoległym każda ma pełne napięcie.</p></details>
+        <details class="why info"><summary>Elektryzowanie balonika</summary><p><b>Potrzebujesz:</b> balonika i swetra lub suchych włosów.</p><p><b>Zrób:</b> potrzyj balonik o sweter i zbliż go do drobnych kawałków papieru albo do ściany.</p><p><b>Dlaczego:</b> przy pocieraniu elektrony przechodzą z jednego ciała na drugie. Balonik ma nadmiar ładunku ujemnego i przyciąga papier.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="bledy" aria-label="Najczęstsze błędy" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Uważaj na te błędy</h2>
+      <p>Te pomyłki zdarzają się najczęściej. Kliknij błąd, aby zobaczyć, jak zrobić to dobrze.</p>
+      <div class="whys">
+        <details class="why err"><summary>Błąd: amperomierz włączam równolegle</summary><p>Dobrze: amperomierz zawsze szeregowo, a woltomierz równolegle do odbiornika.</p></details>
+        <details class="why err"><summary>Błąd: 250 mA = 25 A</summary><p>Dobrze: mili oznacza tysięczną część, więc 250 mA = 250 : 1000 = 0,25 A.</p></details>
+        <details class="why err"><summary>Błąd: prąd „zużywa się” w żarówce</summary><p>Dobrze: natężenie przed żarówką i za nią jest takie samo. Zużywa się energia, a nie ładunek.</p></details>
+        <details class="why err"><summary>Błąd: elektrony płyną od plusa do minusa</summary><p>Dobrze: od plusa do minusa płynie prąd w kierunku umownym. Elektrony płyną odwrotnie: od minusa do plusa.</p></details>
+        <details class="why err"><summary>Błąd: w połączeniu szeregowym napięcie jest wszędzie takie samo</summary><p>Dobrze: w szeregowym takie samo jest natężenie, a napięcia się sumują. W równoległym jest odwrotnie.</p></details>
+        <details class="why err"><summary>Błąd: kWh to jednostka mocy</summary><p>Dobrze: kilowatogodzina to jednostka energii (pracy). Moc mierzymy w watach. 1 kWh = 1000 W · 3600 s = 3 600 000 J.</p></details>
+        <details class="why err"><summary>Błąd: czas w minutach wstawiam do wzoru I = q / t</summary><p>Dobrze: czas zamieniamy na sekundy, np. 2 min = 120 s. Wtedy wynik wyjdzie w amperach.</p></details>
+        <details class="why err"><summary>Błąd: niskie napięcie z baterii zawsze jest bezpieczne, więc gniazdko też</summary><p>Dobrze: bateria 4,5 V jest bezpieczna, ale 230 V z gniazdka może zabić. Groźne jest natężenie, a przy wysokim napięciu przez ciało płynie duży prąd.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="zadania" aria-label="Zadania z rozwiązaniami" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Zadania krok po kroku</h2>
+      <p>Na początek trening z losowymi liczbami: wpisz wynik i sprawdź. Niżej są zadania z rozwiązaniem krok po kroku.</p>
+      <div class="quiz">
+        <div class="q trainer">
+          <p class="eyebrow" style="margin-bottom:6px">Trening · losowe zadania</p>
+          <p id="trQ"></p>
+          <div class="btnrow">
+            <label for="trIn" class="sr">Twoja odpowiedź</label>
+            <input id="trIn" class="inp" inputmode="decimal" autocomplete="off" placeholder="wynik">
+            <span id="trU" class="counter"></span>
+            <button class="navbtn primary" id="trCheck">Sprawdź</button>
+            <button class="navbtn" id="trHint">Podpowiedź</button>
+            <button class="navbtn" id="trNew">Nowe zadanie</button>
+          </div>
+          <p class="expl" id="trMsg" aria-live="polite"></p>
+          <p class="score" style="font-size:16px;margin:8px 0 0" id="trStreak"></p>
+        </div>
+      </div>
+      <div class="quiz" id="tasks" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="quiz" aria-label="Sprawdź się" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Sprawdź się: quiz</h2>
+      <p class="score" id="qScore"></p>
+      <div class="quiz" id="quiz"></div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="krzyzowka" aria-label="Krzyżówka z hasłem" hidden>
+    <div class="text">
+      <p class="eyebrow">Część VI · ćwiczenia</p>
+      <h2>Krzyżówka z hasłem</h2>
+      <p>Wpisz odpowiedzi. Litery w niebieskiej kolumnie utworzą hasło: nazwę jednostki.</p>
+      <div class="kw" id="kwGrid"></div>
+      <ol class="kwclues" id="kwClues"></ol>
+      <div class="btnrow">
+        <button class="navbtn primary" id="kwCheck">Sprawdź</button>
+        <button class="navbtn" id="kwShow">Pokaż rozwiązanie</button>
+        <button class="navbtn" id="kwClear">Wyczyść</button>
+      </div>
+      <p class="expl" id="kwMsg" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== NA KONIEC ===================== -->
+  <section class="slide single" data-id="podsumowanie" data-part="Na koniec" aria-label="Podsumowanie" hidden>
+    <div class="text">
+      <p class="eyebrow">Na koniec</p>
+      <h2>Najważniejsze wzory i fakty</h2>
+      <div class="cards">
+        <div class="card"><h3>Prąd elektryczny</h3><span class="formula">uporządkowany ruch ładunków</span><p>W metalach płyną elektrony, od − do +. Kierunek umowny: od + do −.</p></div>
+        <div class="card"><h3>Natężenie</h3><span class="formula">I = q / t</span><p>W amperach (A). Mierzy je amperomierz, włączany szeregowo.</p></div>
+        <div class="card"><h3>Napięcie</h3><span class="formula">U = W / q</span><p>W woltach (V). Mierzy je woltomierz, włączany równolegle.</p></div>
+        <div class="card"><h3>Prawo Ohma</h3><span class="formula">R = U / I</span><p>Opór w omach (Ω). Natężenie jest proporcjonalne do napięcia.</p></div>
+        <div class="card"><h3>Opór przewodu</h3><span class="formula">R = ρ · l / S</span><p>Rośnie z długością, maleje z grubością, zależy od materiału i temperatury.</p></div>
+        <div class="card"><h3>Szeregowo</h3><span class="formula">I wszędzie równe, U sumuje się</span><p>R = R₁ + R₂. Jedna przerwa gasi wszystko.</p></div>
+        <div class="card"><h3>Równolegle</h3><span class="formula">U wszędzie równe, I sumuje się</span><p>Opór zastępczy mniejszy od najmniejszego. Odbiorniki działają niezależnie.</p></div>
+        <div class="card"><h3>Moc i praca</h3><span class="formula">P = U · I, W = P · t</span><p>Moc w watach (W). 1 kWh = 3 600 000 J.</p></div>
+        <div class="card"><h3>Bezpieczeństwo</h3><span class="formula">30 mA · 50 V</span><p>Prąd ok. 30 mA przez ciało jest groźny. Bezpieczne napięcie: do ok. 50 V (sucho).</p></div>
+        <div class="card"><h3>Przedrostki</h3><span class="formula">µ · m · k · M</span><p>mikro = 0,000 001, mili = 0,001, kilo = 1000, mega = 1 000 000.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide single" data-id="slowniczek" aria-label="Słowniczek pojęć" hidden>
+    <div class="text">
+      <p class="eyebrow">Na koniec</p>
+      <h2>Słowniczek pojęć</h2>
+      <div class="btnrow"><label for="glQ" class="sr">Szukaj pojęcia</label><input id="glQ" class="inp" style="width:260px" placeholder="Szukaj pojęcia…" autocomplete="off"></div>
+      <dl class="gloss" id="gloss"></dl>
+      <p class="expl" id="glNone" hidden>Nie znaleziono takiego pojęcia. Spróbuj innego słowa.</p>
+    </div>
+  </section>
+
+  </main>
+  <nav class="nav" aria-label="Nawigacja slajdów">
+    <button class="navbtn" id="prev">← Wstecz</button>
+    <div>
+      <div class="dots" id="dots"></div>
+      <div class="hint">Strzałki ← → przełączają slajdy</div>
+    </div>
+    <button class="navbtn primary" id="next">Dalej →</button>
+  </nav>
+</div>
