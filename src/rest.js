@@ -33,7 +33,7 @@
           opts.querySelectorAll('.opt').forEach((x, j) => { x.disabled = true; if (j === it.a) x.classList.add('ok'); });
           if (k === it.a) score++; else b.classList.add('no');
           ex.textContent = (k === it.a ? 'Dobrze. ' : 'Niestety nie. ') + it.e; ex.hidden = false;
-          $('qScore').textContent = 'Wynik: ' + score + ' / ' + Q.length;
+          $('qScore').textContent = 'Wynik: ' + score + ' / ' + Q.length; emit('quiz', {score, answered:box.querySelectorAll('.opt.ok').length, total:Q.length});
         };
         opts.appendChild(b);
       });
@@ -71,7 +71,7 @@
       return {q:`Dwie żarówki połączono równolegle. Przez pierwszą płynie ${nv(I1, 1)} A, a przez drugą ${nv(I2, 1)} A. Jakie natężenie płynie ze źródła?`, a:I1 + I2, u:'A', hint:'W połączeniu równoległym natężenia gałęzi się sumują.', sol:`I = ${nv(I1, 1)} A + ${nv(I2, 1)} A = ${nv(I1 + I2, 1)} A`}; }];
   let cur = null, tries = 0, streak = 0, best = 0, good = 0;
   const inp = $('trIn'), msgEl = $('trMsg');
-  const stats = () => { $('trStreak').textContent = `Poprawne: ${good} · seria: ${streak} · najlepsza seria: ${best}`; S.trStreak = best; };
+  const stats = () => { $('trStreak').textContent = `Poprawne: ${good} · seria: ${streak} · najlepsza seria: ${best}`; S.trStreak = best; if (good) emit('trening', {good, best}); };
   function next(){ cur = pick(gens)(); tries = 0; $('trQ').textContent = cur.q; $('trU').textContent = cur.u; inp.value = ''; msgEl.textContent = ''; msgEl.className = 'expl'; }
   function check(){
     const v = parseFloat(inp.value.replace(/\s/g, '').replace(',', '.'));
@@ -132,7 +132,7 @@
     return {w, cells};
   });
   const all = rows.flatMap(r => r.cells);
-  function win(){ msg.textContent = 'Brawo! Hasło to AMPER, jednostka natężenia prądu.'; msg.style.color = 'var(--good)'; S.kwDone = true; all.forEach(c => c.classList.add('ok')); }
+  function win(){ msg.textContent = 'Brawo! Hasło to AMPER, jednostka natężenia prądu.'; msg.style.color = 'var(--good)'; S.kwDone = true; emit('krzyzowka', {}); all.forEach(c => c.classList.add('ok')); }
   all.forEach((inp, idx) => {
     inp.addEventListener('input', () => {
       const v = inp.value.slice(-1).toLocaleUpperCase('pl'); inp.value = v; inp.classList.remove('ok', 'no');
@@ -202,7 +202,7 @@
     ['W połączeniu szeregowym jest wszędzie takie samo', 'i', 'w obwodzie szeregowym natężenie jest jednakowe.'], ['Ładunek przepływający w ciągu 1 s', 'i', 'to definicja natężenia: I = q / t.'], ['Już ok. 30 m… przez ciało jest groźne', 'i', 'groźne jest natężenie ok. 30 mA.']];
   const pool = $('sgPool'), bins = [...document.querySelectorAll('.bin')], msg = $('sgMsg');
   let sel = null, mistakes = 0, done = 0, justDragged = false;
-  const score = () => { $('sgScore').textContent = done === items.length ? `Gotowe! Liczba błędów: ${mistakes}` : `Ułożone: ${done} / ${items.length} · błędy: ${mistakes}`; S.sortDone = done === items.length; };
+  const score = () => { $('sgScore').textContent = done === items.length ? `Gotowe! Liczba błędów: ${mistakes}` : `Ułożone: ${done} / ${items.length} · błędy: ${mistakes}`; S.sortDone = done === items.length; if (S.sortDone) emit('gra', {mistakes}); };
   const hit = (b, e) => { const r = b.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
   function place(card, bin){
     card.style.transform = ''; card.classList.remove('drag', 'sel'); sel = null;
@@ -269,10 +269,11 @@ Object.entries(CH).forEach(([id, list]) => {
   list.forEach(c => { const li = document.createElement('li'); li.innerHTML = `<span class="mk" aria-hidden="true"></span><span class="ct">${c[0]}</span>`; c.li = li; c.done = false; ul.appendChild(li); chTotal++; });
   box.appendChild(ul); host.appendChild(box);
 });
+window.addEventListener('fizyka:przywroc', e => { (e.detail.wyzwania || []).forEach(k => { const [sid, i] = k.split(':'); const c = CH[sid] && CH[sid][+i]; if (c && !c.done) { c.done = true; c.li.classList.add('done'); chDone++; } }); updCh(); });
 const updCh = () => { $('chCount').textContent = `★ ${chDone}/${chTotal}`; };
 function checkCh(id){
   const list = CH[id]; if (!list) return;
-  list.forEach(c => { if (c.done) return; let ok = false; try { ok = c[1](); } catch(e) {} if (ok) { c.done = true; c.li.classList.add('done'); chDone++; updCh(); } });
+  list.forEach(c => { if (c.done) return; let ok = false; try { ok = c[1](); } catch(e) {} if (ok) { c.done = true; c.li.classList.add('done'); chDone++; updCh(); emit('wyzwanie', {id:id + ':' + list.indexOf(c), done:chDone, total:chTotal}); } });
 }
 updCh();
 

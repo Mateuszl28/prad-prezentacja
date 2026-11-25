@@ -1,6 +1,7 @@
 (function(){
 /* ================== narzędzia ================== */
 const $ = id => document.getElementById(id);
+const emit = (type, data) => window.dispatchEvent(new CustomEvent('fizyka:postep', {detail:Object.assign({type}, data)}));
 const NS = 'http://www.w3.org/2000/svg';
 const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 const nf = (x, d=0) => x.toLocaleString('pl-PL', {minimumFractionDigits:d, maximumFractionDigits:d});
